@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -49,3 +50,6 @@ Set `AUTH_JWT_SECRET` from `.env.example` before deployment. The demo login endp
 
 ## Local authentication database
 TRACIA now verifies credentials against a local SQLite database (`data/tracia.db`) using Node 22's built-in SQLite API and scrypt password hashes. The database is created and seeded on first login. For production, replace the local SQLite adapter with the project's managed PostgreSQL/MySQL provider and set `AUTH_JWT_SECRET` to a strong secret.
+=======
+# Tracia_frontend
+>>>>>>> 602a591c7c6daf0f97136fbc5315a811556e9abb
