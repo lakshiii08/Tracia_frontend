@@ -30,6 +30,9 @@ export interface User {
   department?: string;
   avatar?: string;
   email?: string;
+  operator?: string;
+  status?: string;
+  clearanceLevel?: string;
 }
 
 export interface AccessDecision {

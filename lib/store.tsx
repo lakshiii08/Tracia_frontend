@@ -1,9 +1,22 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import { graphEdges as seedGraphEdges, graphNodes as seedGraphNodes, type GraphEdge, type GraphNode } from "@/lib/graphData";
+import { MOCK_GRAPH_NODES as seedGraphNodes, MOCK_GRAPH_EDGES as seedGraphEdges } from "@/mocks/graph";
+import type { GraphEdge, GraphNode } from "@/types/graph";
+import { MOCK_CASES_DATA } from "@/mocks/cases";
+import { MOCK_ENTITY_QUEUE } from "@/mocks/entityResolution";
+import { MOCK_EVIDENCE_FILES } from "@/mocks/evidence";
+import { MOCK_AUDIT_LOGS } from "@/mocks/auditLogs";
+import { MOCK_CDR_RECORDS } from "@/mocks/cdr";
+import { MOCK_TIMELINE_EVENTS } from "@/mocks/timeline";
+import { MOCK_BLOCKCHAIN_RECORDS } from "@/mocks/blockchain";
+import { MOCK_CYBER_EVENTS } from "@/mocks/cyberIntel";
+import { addCaseApi, updateCaseApi } from "@/services/api/cases";
+import { logAuditEvent } from "@/services/api/auditLogs";
+import { resolveEntityMatch } from "@/services/api/entityResolution";
+import { uploadEvidenceFile } from "@/services/api/evidence";
 
-// ---------- Types ----------
+// ---------- Types (Preserved for 100% Backward Compatibility) ----------
 
 export type CaseStatus = "Active" | "Under Review" | "Closed";
 
@@ -60,7 +73,6 @@ export interface AuditEntry {
   actor: string;
 }
 
-// Blueprint Module Types
 export interface CdrRecord {
   id: string;
   caller: string;
@@ -145,193 +157,24 @@ interface AppDataContextValue {
   cyberEvents: CyberIntelEvent[];
 }
 
-// ---------- Seed data ----------
-
-const seedCases: CaseItem[] = [
-  {
-    id: "TR-102",
-    name: "Operation Nightfall",
-    desc: "Kidnapping & Extortion network across primary metropolitan sectors.",
-    entities: 14,
-    date: "2024-10-27",
-    status: "Active",
-    tone: "person",
-    icon: "group",
-    href: "/case/TR-102",
-    assignees: [
-      { name: "Inspector A. Admin", role: "Lead Investigator" },
-      { name: "Det. J. Smith", role: "Field Analyst" },
-    ],
-  },
-  {
-    id: "CASE_209",
-    name: "Cyber Fraud Ring",
-    desc: "Distributed financial siphoning operation targeting institutional accounts.",
-    entities: 32,
-    date: "2024-10-26",
-    status: "Under Review",
-    tone: "account",
-    icon: "account_balance",
-    assignees: [
-      { name: "Inspector A. Admin", role: "Lead Investigator" },
-      { name: "Cyber Expert R. Varma", role: "Digital Forensics" },
-    ],
-  },
-  {
-    id: "CASE_317",
-    name: "Narcotics Transit Route",
-    desc: "Intercepted cross-border smuggling operation.",
-    entities: 8,
-    date: "2024-09-15",
-    status: "Closed",
-    tone: "outline",
-    icon: "local_shipping",
-    assignees: [
-      { name: "Officer C. Patel", role: "Narcotics Division" },
-      { name: "Det. M. Rao", role: "Field Investigator" },
-    ],
-  },
-  {
-    id: "CASE_415",
-    name: "Money Laundering Shells",
-    desc: "Investigation into XYZ Logistics and affiliated shell corporations.",
-    entities: 21,
-    date: "2024-10-28",
-    status: "Active",
-    tone: "organization",
-    icon: "domain",
-    assignees: [
-      { name: "Inspector A. Admin", role: "Lead Investigator" },
-      { name: "FinAnalyst K. Roy", role: "Financial Intelligence" },
-    ],
-  },
-];
-
-const seedEntityQueue: EntityMatch[] = [
-  {
-    id: "match-1",
-    similarity: 94,
-    sourceA: "FIR_101",
-    sourceB: "CDR_RECORDS",
-    nameA: "Vikram Sharma",
-    nameB: "V. Sharma",
-    fieldsA: [
-      { label: "Full Name", value: "Vikram Sharma" },
-      { label: "Date of Birth", value: "12 Oct 1985 (39 Yrs)" },
-      { label: "Phone Number", value: "+91 9876543210" },
-      { label: "Primary Address", value: "Apt 4B, Andheri West, Mumbai" },
-    ],
-    fieldsB: [
-      { label: "Full Name", value: "V. Sharma", matched: true },
-      { label: "Date of Birth", value: "1985-10-12", matched: true },
-      { label: "Phone Number", value: "+91 9876543210", matched: true },
-      { label: "Primary Address", value: "No Data Available" },
-    ],
-  },
-  {
-    id: "match-2",
-    similarity: 87,
-    sourceA: "SURVEILLANCE_09",
-    sourceB: "VEHICLE_RECORDS",
-    nameA: "Rahul Sharma",
-    nameB: "R. Sharma",
-    fieldsA: [
-      { label: "Full Name", value: "Rahul Sharma" },
-      { label: "Date of Birth", value: "03 Feb 1990 (35 Yrs)" },
-      { label: "Phone Number", value: "+91 9012345678" },
-      { label: "Primary Address", value: "Sector 12, Navi Mumbai" },
-    ],
-    fieldsB: [
-      { label: "Full Name", value: "R. Sharma", matched: true },
-      { label: "Date of Birth", value: "1990-02-03", matched: true },
-      { label: "Phone Number", value: "No Data Available" },
-      { label: "Primary Address", value: "Sector 12, Navi Mumbai", matched: true },
-    ],
-  },
-];
-
-const seedEvidence: EvidenceFile[] = [
-  { id: "evd-seed-1", filename: "cdr_dump_q1.csv", type: "CDR", status: "Indexed", progress: 100 },
-  { id: "evd-seed-2", filename: "bank_statement_jan.xlsx", type: "FINANCIAL", status: "Extracted", progress: 100 },
-  { id: "evd-seed-3", filename: "incident_report_01.pdf", type: "FIR", status: "Indexed", progress: 100 },
-];
-
-const seedAudit: AuditEntry[] = [
-  { id: "audit-1", time: "13:55:12.901Z", message: "Evidence Ingested — Batch ID: BTCH_994A", actor: "INV-4492" },
-  { id: "audit-2", time: "13:58:44.210Z", message: "OCR Extraction Complete — incident_report_01.pdf", actor: "SYSTEM" },
-  { id: "audit-3", time: "14:02:18.004Z", message: "Entity Resolved: PER_8922 — high confidence match across 3 sources", actor: "INV-4492" },
-];
-
-const seedCdr: CdrRecord[] = [
-  { id: "cdr-101", caller: "+91 9123456780", callerName: "Person A (Burner)", receiver: "+91 9876543210", receiverName: "Vikram Sharma", durationSec: 342, timestamp: "2025-05-10 09:14:22", towerLocation: "Andheri East Tower #14", crossCaseOverlap: true },
-  { id: "cdr-102", caller: "+91 9876543210", callerName: "Vikram Sharma", receiver: "+91 9012345678", receiverName: "Rahul Sharma", durationSec: 120, timestamp: "2025-05-10 09:45:10", towerLocation: "Bandra Kurla Complex Tower #03", crossCaseOverlap: true },
-  { id: "cdr-103", caller: "+91 9012345678", callerName: "Rahul Sharma", receiver: "+91 9988776655", receiverName: "Priya Nair", durationSec: 512, timestamp: "2025-05-10 10:12:00", towerLocation: "Colaba South Tower #09", crossCaseOverlap: false },
-  { id: "cdr-104", caller: "+91 9123456780", callerName: "Person A (Burner)", receiver: "+91 9988776655", receiverName: "Priya Nair", durationSec: 88, timestamp: "2025-05-10 11:30:45", towerLocation: "Navi Mumbai Tower #21", crossCaseOverlap: true },
-];
-
-const seedTimeline: TimelineEvent[] = [
-  { id: "tl-1", time: "09:00:00", date: "2025-05-10", title: "Evidence Collected", category: "Evidence", description: "CCTV footage & seized mobile phone recovered from primary crime scene.", actor: "Officer A", evidenceRef: "EVD_101" },
-  { id: "tl-2", time: "09:45:10", date: "2025-05-10", title: "Encrypted CDR Call Intercepted", category: "CDR", description: "Call duration 342s between Burner (+91 9123456780) and Vikram Sharma.", actor: "SYSTEM", evidenceRef: "CDR_DUMP_Q1" },
-  { id: "tl-3", time: "11:00:00", date: "2025-05-10", title: "Device Activity Logged", category: "Device", description: "Device ID DEV_992 connected from IP 185.220.101.5 (TOR Exit Node).", actor: "SYSTEM" },
-  { id: "tl-4", time: "13:30:00", date: "2025-05-10", title: "Forensic Analysis Complete", category: "Forensics", description: "Extracted memory dump & SHA-256 hash generated for evidence verification.", actor: "Forensic Expert B", evidenceRef: "FOR_REPORT_882" },
-  { id: "tl-5", time: "15:00:00", date: "2025-05-10", title: "Chain of Custody Handover", category: "Transfer", description: "Physical evidence transferred to Secure Court Custody Vault.", actor: "Custodian Officer C", evidenceRef: "EVD_101" },
-];
-
-const seedBlockchain: BlockchainRecord[] = [
-  {
-    evidenceId: "EVD_101",
-    filename: "incident_report_01.pdf",
-    sha256Hash: "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0",
-    txId: "0x7f8a3291bc409a12e345b6789c01234567890abc",
-    timestamp: "2025-05-10 09:05:12 Z",
-    custodian: "Inspector A (INV-4492)",
-    verifiedStatus: "Verified",
-    history: [
-      { step: "Evidence Collected", actor: "Officer A", timestamp: "2025-05-10 09:00:00 Z" },
-      { step: "SHA-256 Hash Generated & Stored on Blockchain", actor: "SYSTEM", timestamp: "2025-05-10 09:05:12 Z" },
-      { step: "Transferred to Forensic Expert B", actor: "Forensic Expert B", timestamp: "2025-05-10 13:30:00 Z" },
-      { step: "Transferred to Secure Custodian Vault", actor: "Custodian Officer C", timestamp: "2025-05-10 15:00:00 Z" },
-    ],
-  },
-  {
-    evidenceId: "EVD_102",
-    filename: "cdr_dump_q1.csv",
-    sha256Hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    txId: "0x3b91a827c6014e9921b345a678901234567890ef",
-    timestamp: "2025-05-10 10:00:00 Z",
-    custodian: "Analyst 01",
-    verifiedStatus: "Verified",
-    history: [
-      { step: "CDR Data Ingested", actor: "Analyst 01", timestamp: "2025-05-10 10:00:00 Z" },
-      { step: "SHA-256 Hash Verified", actor: "SYSTEM", timestamp: "2025-05-10 10:02:00 Z" },
-    ],
-  },
-];
-
-const seedCyberEvents: CyberIntelEvent[] = [
-  { id: "CYBER_01", ipAddress: "185.220.101.5", macAddress: "00:1A:2B:3C:4D:5E", deviceId: "DEV_MACBOOK_PRO", suspect: "Person A", eventType: "TOR Exit Node Connection", domain: "darkmarket-node.onion", isVpnOrTor: true, riskScore: 92, timestamp: "2025-05-10 11:00:00" },
-  { id: "CYBER_02", ipAddress: "192.168.1.104", macAddress: "A4:C3:F0:12:34:56", deviceId: "DEV_IPHONE_14", suspect: "Vikram Sharma", eventType: "Unauthorized Bank Portal Access", domain: "secure-banking-portal.com", isVpnOrTor: false, riskScore: 78, timestamp: "2025-05-10 12:15:30" },
-  { id: "CYBER_03", ipAddress: "45.154.255.88", macAddress: "B2:77:88:99:AA:BB", deviceId: "DEV_ANDROID_TAB", suspect: "Rahul Sharma", eventType: "Encrypted Telegram Channel Activity", domain: "t.me/privatesignal", isVpnOrTor: true, riskScore: 85, timestamp: "2025-05-10 14:05:10" },
-];
-
 // ---------- Context ----------
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
-let caseCounter = seedCases.length;
-let evidenceCounter = 0;
-let auditCounter = seedAudit.length;
+let caseCounter = MOCK_CASES_DATA.length;
+let evidenceCounter = MOCK_EVIDENCE_FILES.length;
+let auditCounter = MOCK_AUDIT_LOGS.length;
 
 function nowStamp() {
   return new Date().toISOString().split("T")[1].replace("Z", "") + "Z";
 }
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const [cases, setCases] = useState<CaseItem[]>(seedCases);
+  const [cases, setCases] = useState<CaseItem[]>(MOCK_CASES_DATA);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
-  const [entityQueue, setEntityQueue] = useState<EntityMatch[]>(seedEntityQueue);
-  const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>(seedEvidence);
-  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>(seedAudit);
+  const [entityQueue, setEntityQueue] = useState<EntityMatch[]>(MOCK_ENTITY_QUEUE);
+  const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>(MOCK_EVIDENCE_FILES);
+  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>(MOCK_AUDIT_LOGS);
   const [resolvedEntities, setResolvedEntities] = useState<EntityMatch[]>([]);
 
   const selectedCase = useMemo(() => {
@@ -352,14 +195,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [customEdges, setCustomEdges] = useState<GraphEdge[] | null>(null);
 
   // Blueprint Module Data State
-  const [cdrRecords] = useState<CdrRecord[]>(seedCdr);
-  const [timelineEvents] = useState<TimelineEvent[]>(seedTimeline);
-  const [blockchainRecords] = useState<BlockchainRecord[]>(seedBlockchain);
-  const [cyberEvents] = useState<CyberIntelEvent[]>(seedCyberEvents);
+  const [cdrRecords] = useState<CdrRecord[]>(MOCK_CDR_RECORDS);
+  const [timelineEvents] = useState<TimelineEvent[]>(MOCK_TIMELINE_EVENTS);
+  const [blockchainRecords] = useState<BlockchainRecord[]>(MOCK_BLOCKCHAIN_RECORDS);
+  const [cyberEvents] = useState<CyberIntelEvent[]>(MOCK_CYBER_EVENTS);
 
   const pushAudit = useCallback((message: string, actor: string) => {
     auditCounter += 1;
-    setAuditTrail((prev) => [{ id: `audit-${auditCounter}`, time: nowStamp(), message, actor }, ...prev]);
+    const entry: AuditEntry = { id: `audit-${auditCounter}`, time: nowStamp(), message, actor };
+    setAuditTrail((prev) => [entry, ...prev]);
+    // Dispatch to service layer in background
+    logAuditEvent(message, actor).catch(() => {});
   }, []);
 
   const runCypherQuery = useCallback(async (cypher: string) => {
@@ -446,6 +292,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setCases((prev) => [newCase, ...prev]);
     setSelectedCaseId(newCase.id);
     pushAudit(`Case created: ${newCase.name} (${newCase.id})`, "Inspector A.");
+
+    // Sync with cases service
+    addCaseApi({
+      name: input.name,
+      desc: input.desc,
+      category: input.category,
+      priority: (input.priority as "High" | "Medium" | "Critical" | "Low") || "High",
+    }).catch(() => {});
+
     return newCase;
   }, [pushAudit]);
 
@@ -453,6 +308,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setCases((prev) => prev.map((c) => c.id === id ? { ...c, ...patch } : c));
     const changed = Object.keys(patch).join(", ");
     pushAudit(`Case updated: ${id} (${changed})`, "Inspector A.");
+
+    // Sync with cases service
+    updateCaseApi(id, patch).catch(() => {});
   }, [pushAudit]);
 
   const resolveEntity = useCallback<AppDataContextValue["resolveEntity"]>((id, action) => {
@@ -469,6 +327,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (match && action === "confirm") setResolvedEntities((current) => [...current, match]);
       return prev.filter((m) => m.id !== id);
     });
+
+    // Sync with entity resolution service
+    resolveEntityMatch(id, action).catch(() => {});
   }, [pushAudit]);
 
   const addEvidenceFiles = useCallback<AppDataContextValue["addEvidenceFiles"]>((files) => {
@@ -477,6 +338,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const id = `evd-${evidenceCounter}`;
       setEvidenceFiles((prev) => [{ id, filename: f.filename, type: f.type, status: "Uploaded", progress: 0 }, ...prev]);
       pushAudit(`Evidence Uploaded: ${f.filename}`, "Inspector A.");
+
+      uploadEvidenceFile({ filename: f.filename, type: f.type }).catch(() => {});
 
       // Simulate the ingestion pipeline: Uploaded -> OCR Scanning (progress) -> Extracted -> Indexed
       window.setTimeout(() => {
@@ -529,7 +392,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppDataContextValue>(() => ({
     cases, addCase, updateCase, selectedCaseId, selectedCase, setSelectedCaseId, selectCase,
-    entityQueue, totalEntityMatches: seedEntityQueue.length, resolveEntity,
+    entityQueue, totalEntityMatches: MOCK_ENTITY_QUEUE.length, resolveEntity,
     evidenceFiles, addEvidenceFiles, auditTrail, resolvedEntities, graphNodes: graph.nodes, graphEdges: graph.edges,
     neo4jConnected, isNeo4jLoading, neo4jError, currentCypher, runCypherQuery, seedNeo4j,
     cdrRecords, timelineEvents, blockchainRecords, cyberEvents,

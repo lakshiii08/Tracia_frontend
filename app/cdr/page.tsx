@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 import CaseGate from "@/components/CaseGate";
 import { useAppData } from "@/lib/store";
+import { getCdrRelayChain, getCdrMetrics } from "@/services/api/cdr";
+import type { CdrRelayChain, CdrMetrics } from "@/types/cdr";
 
 export default function CdrAnalysisPage() {
-  const { cdrRecords } = useAppData();
+  const { cdrRecords, selectedCase } = useAppData();
   const [search, setSearch] = useState("");
   const [filterOverlap, setFilterOverlap] = useState(false);
+  const [relayChain, setRelayChain] = useState<CdrRelayChain | null>(null);
+  const [metrics, setMetrics] = useState<CdrMetrics | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    getCdrRelayChain(selectedCase?.id).then(setRelayChain);
+    getCdrMetrics(selectedCase?.id).then(setMetrics);
+  }, [selectedCase?.id]);
 
   const filteredCdr = cdrRecords.filter((rec) => {
     const matchesSearch =
@@ -22,11 +32,24 @@ export default function CdrAnalysisPage() {
     return matchesSearch && matchesOverlap;
   });
 
+  const toneClassMap: Record<string, string> = {
+    primary: "border-primary/40 bg-primary/10 text-primary",
+    amber: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+    emerald: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+    rose: "border-rose-500/40 bg-rose-500/10 text-rose-400",
+  };
+
   return (
-    <div className="min-h-screen bg-background text-on-surface">
-      <Navbar title="TRACIA · CDR Analysis Module" showSearch />
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <div className="min-h-screen bg-background text-on-surface flex">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title="CDR Analysis Module"
+          showSearch
+          searchValue={search}
+          onSearchChange={setSearch}
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="min-w-0 flex-1">
           <CaseGate moduleTitle="CDR Communication Analysis">
             <div className="p-5 lg:p-8">
@@ -48,57 +71,66 @@ export default function CdrAnalysisPage() {
                 </div>
 
                 {/* Network Chain Diagram (Section 20 Blueprint) */}
-                <section className="rounded-xl border border-outline-variant bg-surface-container p-5">
-                  <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-on-surface-variant font-label-mono">
-                    Call Relay Chain &amp; Cluster Analysis (Section 20 Blueprint)
-                  </h2>
-                  <div className="flex flex-wrap items-center justify-center gap-4 py-4 font-mono text-xs">
-                    <div className="rounded-lg border border-primary/40 bg-primary/10 p-3 text-center">
-                      <div className="font-bold text-primary">PHONE A (Burner)</div>
-                      <div className="text-[10px] text-outline">+91 9123456780</div>
+                {relayChain && relayChain.nodes.length > 0 && (
+                  <section className="rounded-xl border border-outline-variant bg-surface-container p-5">
+                    <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-on-surface-variant font-label-mono">
+                      Call Relay Chain &amp; Cluster Analysis (Section 20 Blueprint)
+                    </h2>
+                    <div className="flex flex-wrap items-center justify-center gap-4 py-4 font-mono text-xs">
+                      {relayChain.nodes.map((node, idx) => {
+                        const step = relayChain.steps.find((s) => s.fromNodeId === node.id);
+                        const boxClass = toneClassMap[node.tone] || toneClassMap.primary;
+
+                        return (
+                          <div key={node.id} className="flex items-center gap-4">
+                            <div className={`rounded-lg border p-3 text-center ${boxClass}`}>
+                              <div className="font-bold">{node.name}</div>
+                              <div className="text-[10px] text-outline">{node.phone}</div>
+                            </div>
+                            {step && (
+                              <div className="flex flex-col items-center">
+                                <span className="text-[10px] font-bold text-amber-400">
+                                  CALLED ({step.durationSec}s)
+                                </span>
+                                <span className="material-symbols-outlined text-primary">arrow_forward</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-[10px] font-bold text-amber-400">CALLED (342s)</span>
-                      <span className="material-symbols-outlined text-primary">arrow_forward</span>
-                    </div>
-                    <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-center">
-                      <div className="font-bold text-amber-400">PHONE B (Vikram Sharma)</div>
-                      <div className="text-[10px] text-outline">+91 9876543210</div>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-[10px] font-bold text-amber-400">CALLED (120s)</span>
-                      <span className="material-symbols-outlined text-primary">arrow_forward</span>
-                    </div>
-                    <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-center">
-                      <div className="font-bold text-emerald-400">PHONE C (Rahul Sharma)</div>
-                      <div className="text-[10px] text-outline">+91 9012345678</div>
-                    </div>
-                  </div>
-                </section>
+                  </section>
+                )}
 
                 {/* Analysis Metrics Grid */}
-                <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                  <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
-                    <div className="text-xs text-outline">Frequent Contacts</div>
-                    <div className="mt-1 text-2xl font-bold">4 Linked Nodes</div>
-                    <div className="mt-1 text-[11px] text-primary">Highest frequency: Phone A ↔ Phone B</div>
-                  </div>
-                  <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
-                    <div className="text-xs text-outline">Shared Contacts</div>
-                    <div className="mt-1 text-2xl font-bold">2 Common Targets</div>
-                    <div className="mt-1 text-[11px] text-emerald-400">Priya Nair (+91 9988776655)</div>
-                  </div>
-                  <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
-                    <div className="text-xs text-outline">Communication Clusters</div>
-                    <div className="mt-1 text-2xl font-bold">2 Clusters</div>
-                    <div className="mt-1 text-[11px] text-amber-400">High temporal frequency cluster</div>
-                  </div>
-                  <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
-                    <div className="text-xs text-outline">Cross-Case Overlaps</div>
-                    <div className="mt-1 text-2xl font-bold text-rose-400">3 Overlapping Calls</div>
-                    <div className="mt-1 text-[11px] text-rose-300 font-mono">Linked to Active Case</div>
-                  </div>
-                </section>
+                {metrics && (
+                  <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
+                      <div className="text-xs text-outline">Frequent Contacts</div>
+                      <div className="mt-1 text-2xl font-bold">{metrics.frequentContactsCount} Linked Nodes</div>
+                      <div className="mt-1 text-[11px] text-primary">{metrics.frequentContactsHighlight}</div>
+                    </div>
+                    <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
+                      <div className="text-xs text-outline">Shared Contacts</div>
+                      <div className="mt-1 text-2xl font-bold">{metrics.sharedContactsCount} Common Targets</div>
+                      <div className="mt-1 text-[11px] text-emerald-400">{metrics.sharedContactsHighlight}</div>
+                    </div>
+                    <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
+                      <div className="text-xs text-outline">Communication Clusters</div>
+                      <div className="mt-1 text-2xl font-bold">{metrics.communicationClustersCount} Clusters</div>
+                      <div className="mt-1 text-[11px] text-amber-400">{metrics.communicationClustersHighlight}</div>
+                    </div>
+                    <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
+                      <div className="text-xs text-outline">Cross-Case Overlaps</div>
+                      <div className="mt-1 text-2xl font-bold text-rose-400">
+                        {metrics.crossCaseOverlapsCount} Overlapping Calls
+                      </div>
+                      <div className="mt-1 text-[11px] text-rose-300 font-mono">
+                        {metrics.crossCaseOverlapsHighlight}
+                      </div>
+                    </div>
+                  </section>
+                )}
 
                 {/* Search & Filter Controls */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

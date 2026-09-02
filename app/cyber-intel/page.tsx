@@ -1,18 +1,39 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 import CaseGate from "@/components/CaseGate";
 import { useAppData } from "@/lib/store";
+import { getCyberChain } from "@/services/api/cyberIntel";
+import type { CyberChain } from "@/types/cyberIntel";
 
 export default function CyberIntelPage() {
-  const { cyberEvents } = useAppData();
+  const { cyberEvents, selectedCase } = useAppData();
+  const [cyberChain, setCyberChain] = useState<CyberChain | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    getCyberChain(selectedCase?.id).then(setCyberChain);
+  }, [selectedCase?.id]);
+
+  const toneClassMap: Record<string, { border: string; bg: string; text: string }> = {
+    blue: { border: "border-blue-500/40", bg: "bg-blue-500/10", text: "text-blue-400" },
+    emerald: { border: "border-emerald-500/40", bg: "bg-emerald-500/10", text: "text-emerald-400" },
+    amber: { border: "border-amber-500/40", bg: "bg-amber-500/10", text: "text-amber-400" },
+    rose: { border: "border-rose-500/40", bg: "bg-rose-500/10", text: "text-rose-400" },
+    purple: { border: "border-purple-500/40", bg: "bg-purple-500/10", text: "text-purple-400" },
+  };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface">
-      <Navbar title="TRACIA · Cybercrime Intelligence Module" showSearch />
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <div className="min-h-screen bg-background text-on-surface flex">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title="Cybercrime Intelligence Module"
+          showSearch
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="min-w-0 flex-1">
           <CaseGate moduleTitle="Cybercrime Intelligence & Digital Indicators">
             <div className="p-5 lg:p-8">
@@ -34,37 +55,29 @@ export default function CyberIntelPage() {
                 </div>
 
                 {/* Relationship Flow Schema (Section 27 Blueprint) */}
-                <section className="rounded-xl border border-outline-variant bg-surface-container p-5">
-                  <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-on-surface-variant font-label-mono">
-                    Cyber Graph Relationship Chain (Section 27 Blueprint)
-                  </h2>
-                  <div className="flex flex-wrap items-center justify-center gap-3 py-3 font-mono text-xs text-center">
-                    <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2">
-                      <div className="font-bold text-blue-400">PERSON</div>
-                      <div className="text-[10px] text-outline">Person A</div>
+                {cyberChain && cyberChain.nodes.length > 0 && (
+                  <section className="rounded-xl border border-outline-variant bg-surface-container p-5">
+                    <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-on-surface-variant font-label-mono">
+                      Cyber Graph Relationship Chain (Section 27 Blueprint)
+                    </h2>
+                    <div className="flex flex-wrap items-center justify-center gap-3 py-3 font-mono text-xs text-center">
+                      {cyberChain.nodes.map((node, idx) => {
+                        const style = toneClassMap[node.tone] || toneClassMap.blue;
+                        const step = cyberChain.steps.find((s) => s.fromNodeId === node.id);
+
+                        return (
+                          <div key={node.id} className="flex items-center gap-3">
+                            <div className={`rounded-lg border ${style.border} ${style.bg} px-3 py-2`}>
+                              <div className={`font-bold ${style.text}`}>{node.title}</div>
+                              <div className="text-[10px] text-outline">{node.value}</div>
+                            </div>
+                            {step && <span className="text-outline font-bold">{step.label}</span>}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <span className="text-outline font-bold">-[USES]-&gt;</span>
-                    <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2">
-                      <div className="font-bold text-emerald-400">DEVICE</div>
-                      <div className="text-[10px] text-outline">DEV_MACBOOK_PRO</div>
-                    </div>
-                    <span className="text-outline font-bold">-[CONNECTED_FROM]-&gt;</span>
-                    <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2">
-                      <div className="font-bold text-amber-400">IP ADDRESS</div>
-                      <div className="text-[10px] text-outline">185.220.101.5</div>
-                    </div>
-                    <span className="text-outline font-bold">-[ASSOCIATED_WITH]-&gt;</span>
-                    <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2">
-                      <div className="font-bold text-rose-400">CYBER EVENT</div>
-                      <div className="text-[10px] text-outline">TOR Exit Node</div>
-                    </div>
-                    <span className="text-outline font-bold">-[RELATED_TO]-&gt;</span>
-                    <div className="rounded-lg border border-purple-500/40 bg-purple-500/10 px-3 py-2">
-                      <div className="font-bold text-purple-400">CASE</div>
-                      <div className="text-[10px] text-outline">ACTIVE</div>
-                    </div>
-                  </div>
-                </section>
+                  </section>
+                )}
 
                 {/* Cyber Events Table */}
                 <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container">

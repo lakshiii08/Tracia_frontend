@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAppData } from "@/lib/store";
-import Navbar from "@/components/Navbar";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 import { useAuthorization } from "@/auth/useAuthorization";
 import AccessBadge from "@/components/authorization/AccessBadge";
@@ -47,6 +47,7 @@ function DashboardInner() {
   const [notice, setNotice] = useState<string | null>(null);
   const [inspectCase, setInspectCase] = useState<ExtendedCaseItem | null>(null);
   const [activeTab, setActiveTab] = useState<"directory" | "management" | "assigned" | "related" | "requests">("directory");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Merge storeCases and mockCases for complete data consistency
   const allCasesList = useMemo(() => {
@@ -59,7 +60,7 @@ function DashboardInner() {
     return allCasesList.filter((c) =>
       `${c.id} ${c.name} ${c.desc} ${c.status} ${c.assignees?.map((a) => a.name).join(" ")}`.toLowerCase().includes(q)
     );
-  }, [query, allCasesList]);
+  }, [allCasesList, query]);
 
   const showNotice = (message: string) => {
     setNotice(message);
@@ -88,18 +89,24 @@ function DashboardInner() {
   const pendingRequestsCount = accessRequests.filter((r) => r.status === "PENDING").length;
 
   return (
-    <div className="min-h-screen bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
+    <div className="min-h-screen bg-background text-on-surface flex">
       {notice && (
         <div
           role="status"
-          className="fixed right-5 top-5 z-50 rounded-lg border border-primary/30 bg-surface-container-high px-4 py-3 text-sm text-on-surface shadow-xl"
+          className="fixed right-5 top-20 z-50 rounded-lg border border-primary/30 bg-surface-container-high px-4 py-3 text-sm text-on-surface shadow-xl"
         >
           {notice}
         </div>
       )}
-      <Navbar title="Case Management Directory" showSearch />
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title="Case Management Directory"
+          showSearch
+          searchValue={query}
+          onSearchChange={setQuery}
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="flex-1 flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
           {/* Active Session & Role Banner */}
           <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-outline-variant pb-4">
