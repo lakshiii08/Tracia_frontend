@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { AppDataProvider } from "@/lib/store";
+import ClientProviders from "@/components/providers/ClientProviders";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} min-h-screen w-full overflow-x-hidden antialiased`}
       >
-        <AppDataProvider>{children}</AppDataProvider>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

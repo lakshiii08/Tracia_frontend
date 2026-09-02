@@ -6,9 +6,19 @@ import Link from "next/link";
 import { useAppData } from "@/lib/store";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import { useAuthorization } from "@/auth/useAuthorization";
+import AccessBadge from "@/components/authorization/AccessBadge";
+import CaseTable from "@/components/cases/CaseTable";
+import RelatedCases from "@/components/cases/RelatedCases";
+import AccessRequestsTable from "@/components/admin/AccessRequestsTable";
+import CaseAccessCard from "@/components/cases/CaseAccessCard";
+import type { ExtendedCaseItem } from "@/mocks/cases";
 
 const toneClass: Record<string, string> = {
-  person: "bg-entity-person", account: "bg-entity-account", outline: "bg-outline", organization: "bg-entity-organization",
+  person: "bg-entity-person",
+  account: "bg-entity-account",
+  outline: "bg-outline",
+  organization: "bg-entity-organization",
 };
 
 export default function DashboardPage() {
@@ -22,15 +32,34 @@ export default function DashboardPage() {
 function DashboardInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { cases } = useAppData();
+  const { cases: storeCases, selectedCase, selectCase } = useAppData();
+  const {
+    currentUser,
+    hasPermission,
+    assignedCases,
+    relatedCases,
+    accessRequests,
+    evaluateCaseAccess,
+    cases: mockCases,
+  } = useAuthorization();
+
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [inspectCase, setInspectCase] = useState<ExtendedCaseItem | null>(null);
+  const [activeTab, setActiveTab] = useState<"directory" | "management" | "assigned" | "related" | "requests">("directory");
 
-  const filtered = useMemo(() => {
+  // Merge storeCases and mockCases for complete data consistency
+  const allCasesList = useMemo(() => {
+    return mockCases;
+  }, [mockCases]);
+
+  const filteredCases = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return cases;
-    return cases.filter(c => `${c.id} ${c.name} ${c.desc} ${c.status}`.toLowerCase().includes(q));
-  }, [query, cases]);
+    if (!q) return allCasesList;
+    return allCasesList.filter((c) =>
+      `${c.id} ${c.name} ${c.desc} ${c.status} ${c.assignees?.map((a) => a.name).join(" ")}`.toLowerCase().includes(q)
+    );
+  }, [query, allCasesList]);
 
   const showNotice = (message: string) => {
     setNotice(message);
@@ -46,39 +75,260 @@ function DashboardInner() {
     }
   }, [searchParams, router]);
 
+  const handleSelectAndOpen = (c: ExtendedCaseItem) => {
+    selectCase(c.id);
+    const access = evaluateCaseAccess(c);
+    if (access.canView) {
+      router.push(c.href || `/case/${c.id}`);
+    } else {
+      setInspectCase(c);
+    }
+  };
+
+  const pendingRequestsCount = accessRequests.filter((r) => r.status === "PENDING").length;
+
   return (
     <div className="min-h-screen bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
-      {notice && <div role="status" className="fixed right-5 top-5 z-50 rounded-lg border border-primary/30 bg-surface-container-high px-4 py-3 text-sm text-on-surface shadow-xl">{notice}</div>}
-      <Navbar title="Case Management" showSearch />
-      <div className="flex min-h-[calc(100vh-4rem)]"><Sidebar />
-        <main className="flex flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
-          <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div><h3 className="font-headline-lg text-headline-lg font-bold text-on-surface">Active Cases</h3><p className="mt-1 font-label-mono text-label-mono text-on-surface-variant">Terminal Session: SECURE // REGION-04</p></div>
-            <Link href="/case/new" className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-fixed"><span className="material-symbols-outlined text-[20px]">add</span>New Case</Link>
+      {notice && (
+        <div
+          role="status"
+          className="fixed right-5 top-5 z-50 rounded-lg border border-primary/30 bg-surface-container-high px-4 py-3 text-sm text-on-surface shadow-xl"
+        >
+          {notice}
+        </div>
+      )}
+      <Navbar title="Case Management Directory" showSearch />
+      <div className="flex min-h-[calc(100vh-4rem)]">
+        <Sidebar />
+        <main className="flex-1 flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+          {/* Active Session & Role Banner */}
+          <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-outline-variant pb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="rounded bg-primary/10 border border-primary/30 px-2 py-0.5 text-xs font-mono font-bold text-primary">
+                  ACTIVE USER: {currentUser.name}
+                </span>
+                <span className="rounded bg-surface-container-high px-2 py-0.5 text-xs font-mono text-on-surface border border-outline-variant">
+                  ROLE: {currentUser.role}
+                </span>
+              </div>
+              <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface">Case Directory &amp; RBAC Access Control</h1>
+              <p className="mt-1 font-label-mono text-xs text-on-surface-variant">
+                Graph-Aware access control enforcement. Select a Case File to unlock linked intelligence, CDR traces &amp; records.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {hasPermission("cases.assign") && (
+                <Link
+                  href="/case/new"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-on-primary hover:bg-primary-fixed transition shadow-md"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>New Case
+                </Link>
+              )}
+            </div>
           </section>
 
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {[['folder_open','Total Active Cases','142','primary'],['warning','Flagged Anomalies','23','risk'],['pending_actions','Pending Resolutions','8','vehicle']].map(([icon,label,value,tone]) => (
-              <div key={label} className="flex items-center gap-4 rounded-xl border border-surface-variant/50 bg-surface-container p-5 hover:border-primary/30">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${tone === 'risk' ? 'bg-entity-risk/10 text-entity-risk' : tone === 'vehicle' ? 'bg-entity-vehicle/10 text-entity-vehicle' : 'bg-primary/10 text-primary'}`}><span className="material-symbols-outlined">{icon}</span></div>
-                <div><p className="text-sm text-on-surface-variant">{label}</p><p className="font-headline-md text-headline-md text-on-surface">{value}</p></div>
+          {/* Navigation View Switcher Tabs */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-outline-variant pb-2 text-xs font-semibold">
+            <button
+              onClick={() => setActiveTab("directory")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition ${
+                activeTab === "directory" ? "bg-primary text-on-primary font-bold" : "text-on-surface-variant hover:bg-surface-container"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">grid_view</span> Case Cards Directory ({filteredCases.length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab("management")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition ${
+                activeTab === "management" ? "bg-primary text-on-primary font-bold" : "text-on-surface-variant hover:bg-surface-container"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">table_chart</span> RBAC Case Table
+            </button>
+
+            <button
+              onClick={() => setActiveTab("assigned")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition ${
+                activeTab === "assigned" ? "bg-primary text-on-primary font-bold" : "text-on-surface-variant hover:bg-surface-container"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">assignment_ind</span> My Assigned Cases ({assignedCases.length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab("related")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition ${
+                activeTab === "related" ? "bg-primary text-on-primary font-bold" : "text-on-surface-variant hover:bg-surface-container"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">hub</span> Related Cases ({relatedCases.length})
+            </button>
+
+            {hasPermission("cases.approveAccess") && (
+              <button
+                onClick={() => setActiveTab("requests")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition ${
+                  activeTab === "requests" ? "bg-primary text-on-primary font-bold" : "text-on-surface-variant hover:bg-surface-container"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">key</span> Access Requests ({pendingRequestsCount})
+              </button>
+            )}
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            {[
+              ["folder_open", "Accessible Cases Scope", `${currentUser.role === "ADMIN" ? allCasesList.length : assignedCases.length + relatedCases.length}`, "primary"],
+              ["badge", "Assigned Cases (L4)", `${assignedCases.length}`, "primary"],
+              ["hub", "Discovered Related Cases", `${relatedCases.length}`, "vehicle"],
+              ["key", "Pending Access Requests", `${pendingRequestsCount}`, "risk"],
+            ].map(([icon, label, value, tone]) => (
+              <div
+                key={label}
+                className="flex items-center gap-4 rounded-xl border border-surface-variant/50 bg-surface-container p-4 hover:border-primary/30 transition shadow-sm"
+              >
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                    tone === "risk"
+                      ? "bg-entity-risk/10 text-entity-risk"
+                      : tone === "vehicle"
+                      ? "bg-entity-vehicle/10 text-entity-vehicle"
+                      : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">{icon}</span>
+                </div>
+                <div>
+                  <p className="text-[11px] text-on-surface-variant font-medium">{label}</p>
+                  <p className="font-headline-md text-xl text-on-surface font-bold">{value}</p>
+                </div>
               </div>
             ))}
           </section>
 
-          {filtered.length ? <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {filtered.map(c => {
-              const card = <div className="relative flex h-full flex-col gap-4 overflow-hidden rounded-xl border border-surface-variant/50 bg-surface-container p-5 transition-all hover:-translate-y-1 hover:border-primary/50">
-                <div className={`absolute left-0 top-0 h-full w-1 ${toneClass[c.tone]}`} />
-                <div className="flex items-start justify-between gap-2"><span className="rounded bg-primary/10 px-2 py-0.5 font-label-mono text-label-mono text-primary">{c.id}</span><span className="rounded border border-outline/20 bg-outline/10 px-2 py-0.5 text-xs text-outline">● {c.status}</span></div>
-                <div><h4 className="font-headline-md text-headline-md text-on-surface">{c.name}</h4><p className="mt-1 line-clamp-2 text-sm text-on-surface-variant">{c.desc}</p></div>
-                <div className="mt-auto flex items-center justify-between border-t border-surface-variant/50 pt-4 text-sm text-on-surface-variant"><span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[16px]">{c.icon}</span>{c.entities} Entities</span><span className="font-code-sm text-code-sm">{c.date}</span></div>
-              </div>;
-              return <Link key={c.id} href={c.href || `/case/${c.id}`} className="block">{card}</Link>;
-            })}
-          </section> : <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-12 text-center"><span className="material-symbols-outlined text-4xl text-outline">search_off</span><h4 className="mt-3 font-headline-md text-on-surface">No cases found</h4><p className="mt-1 text-sm text-on-surface-variant">Try a different search term.</p><button onClick={() => setQuery("")} className="mt-4 rounded-lg border border-primary/30 px-4 py-2 text-sm text-primary">Clear search</button></div>}
+          {/* TAB: Inspection Drawer Overlay */}
+          {inspectCase && (
+            <CaseAccessCard caseItem={inspectCase} onClose={() => setInspectCase(null)} />
+          )}
 
-          <footer className="flex flex-col gap-2 border-t border-surface-variant/30 pt-6 font-label-mono text-xs text-outline/60 sm:flex-row sm:items-center sm:justify-between"><span>[TERMINAL_ID: ALPHA_77]</span><span>DATA_STREAM: ENCRYPTED_AES256</span><span>TRACIA Intelligence Platform</span></footer>
+          {/* TAB 1: Case Cards Directory */}
+          {activeTab === "directory" && (
+            <div>
+              {filteredCases.length ? (
+                <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  {filteredCases.map((c) => {
+                    const isSelected = selectedCase?.id === c.id;
+                    const access = evaluateCaseAccess(c);
+
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => handleSelectAndOpen(c)}
+                        className={`relative flex h-full flex-col gap-3 overflow-hidden rounded-xl border p-5 transition-all cursor-pointer hover:-translate-y-1 ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-lg ring-1 ring-primary"
+                            : "border-surface-variant/50 bg-surface-container hover:border-primary/50"
+                        }`}
+                      >
+                        <div className={`absolute left-0 top-0 h-full w-1 ${toneClass[c.tone]}`} />
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="rounded bg-primary/10 px-2 py-0.5 font-label-mono text-label-mono text-primary font-bold border border-primary/20">
+                              {c.id}
+                            </span>
+                            {isSelected && (
+                              <span className="rounded bg-primary text-on-primary px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase">
+                                ACTIVE
+                              </span>
+                            )}
+                          </div>
+                          <AccessBadge level={access.level} size="sm" />
+                        </div>
+
+                        <div>
+                          <h4 className="font-headline-md text-headline-md text-on-surface font-bold">{c.name}</h4>
+                          <p className="mt-1 line-clamp-2 text-xs text-on-surface-variant">{c.desc}</p>
+                        </div>
+
+                        {/* Assignees List Section */}
+                        <div className="pt-2 border-t border-surface-variant/50 space-y-1.5">
+                          <div className="text-[10px] font-mono text-outline uppercase font-bold flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[13px] text-primary">badge</span>
+                            Assignees:
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {c.assignees && c.assignees.length > 0 ? (
+                              c.assignees.map((a, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1 rounded bg-surface-container-high px-2 py-0.5 text-[11px] text-on-surface border border-outline-variant/60"
+                                >
+                                  <span className="font-medium">{a.name}</span>
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-[11px] text-outline italic">Inspector A. Admin</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-between border-t border-surface-variant/50 pt-3 text-xs text-on-surface-variant">
+                          <span className="flex items-center gap-1.5 font-medium">
+                            <span className="material-symbols-outlined text-[16px] text-primary">{c.icon}</span>
+                            {c.entities} Entities Mapped
+                          </span>
+                          <span className="font-code-sm text-code-sm text-outline">{c.date}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </section>
+              ) : (
+                <div className="rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-12 text-center">
+                  <span className="material-symbols-outlined text-4xl text-outline">search_off</span>
+                  <h4 className="mt-3 font-headline-md text-on-surface">No cases found</h4>
+                  <p className="mt-1 text-sm text-on-surface-variant">Try a different search query.</p>
+                  <button
+                    onClick={() => setQuery("")}
+                    className="mt-4 rounded-lg border border-primary/30 px-4 py-2 text-sm text-primary"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: RBAC Case Table */}
+          {activeTab === "management" && (
+            <CaseTable cases={filteredCases} onSelectCase={(c) => setInspectCase(c)} />
+          )}
+
+          {/* TAB 3: My Assigned Cases */}
+          {activeTab === "assigned" && (
+            <CaseTable cases={assignedCases} onSelectCase={(c) => setInspectCase(c)} />
+          )}
+
+          {/* TAB 4: Graph Discovered Related Cases */}
+          {activeTab === "related" && (
+            <RelatedCases relatedItems={relatedCases} />
+          )}
+
+          {/* TAB 5: Access Requests Management (Admin) */}
+          {activeTab === "requests" && (
+            <AccessRequestsTable />
+          )}
+
+          <footer className="flex flex-col gap-2 border-t border-surface-variant/30 pt-6 font-label-mono text-xs text-outline/60 sm:flex-row sm:items-center sm:justify-between">
+            <span>[TERMINAL_ID: ALPHA_77]</span>
+            <span>DATA_STREAM: ENCRYPTED_AES256</span>
+            <span>TRACIA RBAC Architecture Active</span>
+          </footer>
         </main>
       </div>
     </div>

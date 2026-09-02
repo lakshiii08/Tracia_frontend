@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAppData, type CaseStatus } from "@/lib/store";
@@ -9,10 +9,16 @@ import Sidebar from "@/components/Sidebar";
 
 export default function CaseWorkspacePage() {
   const params = useParams<{ id: string }>();
-  const { cases, evidenceFiles, auditTrail, graphNodes, graphEdges, updateCase, cdrRecords, timelineEvents, blockchainRecords, cyberEvents } = useAppData();
+  const { cases, evidenceFiles, auditTrail, graphNodes, graphEdges, updateCase, selectCase, cdrRecords, timelineEvents, blockchainRecords, cyberEvents } = useAppData();
   
   const caseIdInput = (params.id || "TR-102").toUpperCase();
   const currentCase = cases.find(c => c.id.toUpperCase() === caseIdInput) || cases[0];
+
+  useEffect(() => {
+    if (currentCase) {
+      selectCase(currentCase.id);
+    }
+  }, [currentCase, selectCase]);
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "persons" | "evidence" | "cdr" | "timeline" | "graph" | "ai" | "custody" | "cyber"
@@ -55,6 +61,23 @@ export default function CaseWorkspacePage() {
                 </div>
                 <h1 className="text-3xl font-bold">{currentCase.name}</h1>
                 <p className="mt-1 max-w-3xl text-sm text-on-surface-variant">{currentCase.desc}</p>
+                
+                {/* Assignees Header Badge */}
+                <div className="mt-3 flex items-center gap-2 text-xs text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[16px] text-primary">badge</span>
+                  <span className="font-bold text-on-surface">Assigned Investigators:</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {currentCase.assignees && currentCase.assignees.length > 0 ? (
+                      currentCase.assignees.map((a, idx) => (
+                        <span key={idx} className="rounded bg-surface-container-high border border-outline-variant px-2.5 py-0.5 text-xs font-semibold text-on-surface">
+                          {a.name} <span className="text-[10px] text-outline font-normal">({a.role})</span>
+                        </span>
+                      ))
+                    ) : (
+                      <span className="rounded bg-surface-container-high border border-outline-variant px-2 py-0.5 text-xs">Inspector A. Admin</span>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">

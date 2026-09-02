@@ -7,6 +7,12 @@ import { graphEdges as seedGraphEdges, graphNodes as seedGraphNodes, type GraphE
 
 export type CaseStatus = "Active" | "Under Review" | "Closed";
 
+export interface Assignee {
+  name: string;
+  role: string;
+  avatar?: string;
+}
+
 export interface CaseItem {
   id: string;
   name: string;
@@ -17,6 +23,7 @@ export interface CaseItem {
   tone: "person" | "account" | "outline" | "organization";
   icon: string;
   href?: string;
+  assignees?: Assignee[];
 }
 
 export interface EntityField {
@@ -103,8 +110,13 @@ export interface CyberIntelEvent {
 
 interface AppDataContextValue {
   cases: CaseItem[];
-  addCase: (input: { name: string; desc: string; category: string; priority: string }) => CaseItem;
+  addCase: (input: { name: string; desc: string; category: string; priority: string; investigator?: string }) => CaseItem;
   updateCase: (id: string, patch: Partial<Pick<CaseItem, "name" | "desc" | "status">>) => void;
+
+  selectedCaseId: string | null;
+  selectedCase: CaseItem | null;
+  setSelectedCaseId: (id: string | null) => void;
+  selectCase: (id: string | null) => void;
 
   entityQueue: EntityMatch[];
   totalEntityMatches: number;
@@ -136,10 +148,63 @@ interface AppDataContextValue {
 // ---------- Seed data ----------
 
 const seedCases: CaseItem[] = [
-  { id: "TR-102", name: "Operation Nightfall", desc: "Kidnapping & Extortion network across primary metropolitan sectors.", entities: 14, date: "2024-10-27", status: "Active", tone: "person", icon: "group", href: "/case/TR-102" },
-  { id: "CASE_209", name: "Cyber Fraud Ring", desc: "Distributed financial siphoning operation targeting institutional accounts.", entities: 32, date: "2024-10-26", status: "Under Review", tone: "account", icon: "account_balance" },
-  { id: "CASE_317", name: "Narcotics Transit Route", desc: "Intercepted cross-border smuggling operation.", entities: 8, date: "2024-09-15", status: "Closed", tone: "outline", icon: "local_shipping" },
-  { id: "CASE_415", name: "Money Laundering Shells", desc: "Investigation into XYZ Logistics and affiliated shell corporations.", entities: 21, date: "2024-10-28", status: "Active", tone: "organization", icon: "domain" },
+  {
+    id: "TR-102",
+    name: "Operation Nightfall",
+    desc: "Kidnapping & Extortion network across primary metropolitan sectors.",
+    entities: 14,
+    date: "2024-10-27",
+    status: "Active",
+    tone: "person",
+    icon: "group",
+    href: "/case/TR-102",
+    assignees: [
+      { name: "Inspector A. Admin", role: "Lead Investigator" },
+      { name: "Det. J. Smith", role: "Field Analyst" },
+    ],
+  },
+  {
+    id: "CASE_209",
+    name: "Cyber Fraud Ring",
+    desc: "Distributed financial siphoning operation targeting institutional accounts.",
+    entities: 32,
+    date: "2024-10-26",
+    status: "Under Review",
+    tone: "account",
+    icon: "account_balance",
+    assignees: [
+      { name: "Inspector A. Admin", role: "Lead Investigator" },
+      { name: "Cyber Expert R. Varma", role: "Digital Forensics" },
+    ],
+  },
+  {
+    id: "CASE_317",
+    name: "Narcotics Transit Route",
+    desc: "Intercepted cross-border smuggling operation.",
+    entities: 8,
+    date: "2024-09-15",
+    status: "Closed",
+    tone: "outline",
+    icon: "local_shipping",
+    assignees: [
+      { name: "Officer C. Patel", role: "Narcotics Division" },
+      { name: "Det. M. Rao", role: "Field Investigator" },
+    ],
+  },
+  {
+    id: "CASE_415",
+    name: "Money Laundering Shells",
+    desc: "Investigation into XYZ Logistics and affiliated shell corporations.",
+    entities: 21,
+    date: "2024-10-28",
+    status: "Active",
+    tone: "organization",
+    icon: "domain",
+    assignees: [
+      { name: "Inspector A. Admin", role: "Lead Investigator" },
+      { name: "FinAnalyst K. Roy", role: "Financial Intelligence" },
+    ],
+  },
 ];
 
 const seedEntityQueue: EntityMatch[] = [
@@ -263,10 +328,20 @@ function nowStamp() {
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [cases, setCases] = useState<CaseItem[]>(seedCases);
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const [entityQueue, setEntityQueue] = useState<EntityMatch[]>(seedEntityQueue);
   const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>(seedEvidence);
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>(seedAudit);
   const [resolvedEntities, setResolvedEntities] = useState<EntityMatch[]>([]);
+
+  const selectedCase = useMemo(() => {
+    if (!selectedCaseId) return null;
+    return cases.find((c) => c.id.toUpperCase() === selectedCaseId.toUpperCase()) || null;
+  }, [cases, selectedCaseId]);
+
+  const selectCase = useCallback((id: string | null) => {
+    setSelectedCaseId(id);
+  }, []);
 
   // Neo4j State
   const [neo4jConnected, setNeo4jConnected] = useState<boolean>(false);
@@ -347,6 +422,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       money_laundering: "domain",
       arms: "military_tech",
     };
+
+    const leadInvestigatorName = input.investigator === "smith"
+      ? "Det. J. Smith"
+      : input.investigator === "doe"
+      ? "Agent R. Doe"
+      : "Inspector A. Admin";
+
     const newCase: CaseItem = {
       id: `CASE_${100 + caseCounter}`,
       name: input.name,
@@ -356,8 +438,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       status: "Active",
       tone: toneByCategory[input.category] ?? "outline",
       icon: iconByCategory[input.category] ?? "folder",
+      assignees: [
+        { name: leadInvestigatorName, role: "Lead Investigator" },
+        { name: "Field Tech 02", role: "Assigned Intelligence Officer" },
+      ],
     };
     setCases((prev) => [newCase, ...prev]);
+    setSelectedCaseId(newCase.id);
     pushAudit(`Case created: ${newCase.name} (${newCase.id})`, "Inspector A.");
     return newCase;
   }, [pushAudit]);
@@ -416,22 +503,37 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const graph = useMemo(() => {
     const nodes = customNodes ? [...customNodes] : [...seedGraphNodes];
     const edges = customEdges ? [...customEdges] : [...seedGraphEdges];
+    const existingNodeIds = new Set(nodes.map((n) => n.id));
+    const existingEdgeIds = new Set(edges.map((e) => e.id));
+
     resolvedEntities.forEach((match) => {
       const aId = `resolved-${match.id}-a`;
       const bId = `resolved-${match.id}-b`;
-      nodes.push({ id: aId, label: match.nameA, type: "person", details: { subtitle: `Resolved from ${match.sourceA}`, idLabel: match.id, connections: 1 } });
-      nodes.push({ id: bId, label: match.nameB, type: "person", details: { subtitle: `Resolved from ${match.sourceB}`, idLabel: `${match.id}-B`, connections: 1 } });
-      edges.push({ id: `resolved-edge-${match.id}`, from: aId, to: bId, label: `confirmed ${match.similarity}%`, kind: "inferred" });
+      const edgeId = `resolved-edge-${match.id}`;
+
+      if (!existingNodeIds.has(aId)) {
+        existingNodeIds.add(aId);
+        nodes.push({ id: aId, label: match.nameA, type: "person", details: { subtitle: `Resolved from ${match.sourceA}`, idLabel: match.id, connections: 1 } });
+      }
+      if (!existingNodeIds.has(bId)) {
+        existingNodeIds.add(bId);
+        nodes.push({ id: bId, label: match.nameB, type: "person", details: { subtitle: `Resolved from ${match.sourceB}`, idLabel: `${match.id}-B`, connections: 1 } });
+      }
+      if (!existingEdgeIds.has(edgeId)) {
+        existingEdgeIds.add(edgeId);
+        edges.push({ id: edgeId, from: aId, to: bId, label: `confirmed ${match.similarity}%`, kind: "inferred" });
+      }
     });
     return { nodes, edges };
   }, [customNodes, customEdges, resolvedEntities]);
 
   const value = useMemo<AppDataContextValue>(() => ({
-    cases, addCase, updateCase, entityQueue, totalEntityMatches: seedEntityQueue.length, resolveEntity,
+    cases, addCase, updateCase, selectedCaseId, selectedCase, setSelectedCaseId, selectCase,
+    entityQueue, totalEntityMatches: seedEntityQueue.length, resolveEntity,
     evidenceFiles, addEvidenceFiles, auditTrail, resolvedEntities, graphNodes: graph.nodes, graphEdges: graph.edges,
     neo4jConnected, isNeo4jLoading, neo4jError, currentCypher, runCypherQuery, seedNeo4j,
     cdrRecords, timelineEvents, blockchainRecords, cyberEvents,
-  }), [cases, addCase, updateCase, entityQueue, resolveEntity, evidenceFiles, addEvidenceFiles, auditTrail, resolvedEntities, graph, neo4jConnected, isNeo4jLoading, neo4jError, currentCypher, runCypherQuery, seedNeo4j, cdrRecords, timelineEvents, blockchainRecords, cyberEvents]);
+  }), [cases, addCase, updateCase, selectedCaseId, selectedCase, selectCase, entityQueue, resolveEntity, evidenceFiles, addEvidenceFiles, auditTrail, resolvedEntities, graph, neo4jConnected, isNeo4jLoading, neo4jError, currentCypher, runCypherQuery, seedNeo4j, cdrRecords, timelineEvents, blockchainRecords, cyberEvents]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }

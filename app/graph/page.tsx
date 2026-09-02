@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useAppData } from "@/lib/store";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import CaseGate from "@/components/CaseGate";
 import RelationshipGraph from "@/components/RelationshipGraph";
 import { entityColors, type GraphNode } from "@/lib/graphData";
 
@@ -72,44 +74,11 @@ export default function GraphPage() {
   };
 
   return (
-    <div className="bg-background text-on-background font-body-sm h-screen flex flex-col overflow-hidden">
-      <header className="bg-surface/70 backdrop-blur-xl border-b border-outline-variant flex justify-between items-center px-margin-desktop h-16 w-full shrink-0 z-50">
-        <div className="flex items-center gap-4">
-          <div>
-            <Link href="/dashboard" className="text-headline-md font-headline-md font-black text-on-surface tracking-tighter leading-none">
-              TRACIA
-            </Link>
-            <p className="text-label-mono font-label-mono text-on-surface-variant">Trace. Relationship. Intelligence.</p>
-          </div>
-        </div>
-        <div className="flex-1 max-w-2xl mx-8 relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
-          <input
-            className="w-full bg-surface-container-high border border-outline-variant rounded-full py-1.5 pl-10 pr-4 text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-            placeholder="Search entity, phone, vehicle, case..."
-            type="text"
-          />
-        </div>
-        <nav className="hidden md:flex items-center gap-6">
-          <Link className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors pb-1" href="/dashboard">
-            <span className="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
-          </Link>
-          <Link className="flex items-center gap-2 text-primary border-b-2 border-primary pb-1" href="/dashboard">
-            <span className="material-symbols-outlined text-[18px]">folder_shared</span> Cases
-          </Link>
-          <Link className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors pb-1" href="/alerts">
-            <span className="material-symbols-outlined text-[18px]">notifications</span> Alerts
-          </Link>
-          <Link className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors pb-1" href="/copilot">
-            <span className="material-symbols-outlined text-[18px]">smart_toy</span> Copilot
-          </Link>
-        </nav>
-        <div className="flex items-center gap-4 ml-6">
-          <Link href="/profile" className="text-body-sm font-body-sm hover:text-primary transition-colors">Inspector A.</Link>
-        </div>
-      </header>
-
-      <div className="flex-1 flex overflow-hidden">
+    <div className="bg-background text-on-background font-body-sm min-h-screen flex flex-col overflow-hidden">
+      <Navbar title="TRACIA · Knowledge Graph Module" showSearch />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <CaseGate moduleTitle="Knowledge Graph & Entity Relations">
+          <div className="flex-1 flex overflow-hidden min-h-0 h-full">
         {/* Left sidebar */}
         <aside className="w-64 bg-surface-container-low border-r border-outline-variant flex flex-col shrink-0 overflow-y-auto">
           <div className="p-4 border-b border-outline-variant">
@@ -605,6 +574,8 @@ export default function GraphPage() {
           )}
         </aside>
       </div>
-    </div>
+    </CaseGate>
+  </div>
+</div>
   );
 }

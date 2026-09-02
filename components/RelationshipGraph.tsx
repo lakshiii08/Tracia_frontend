@@ -29,8 +29,25 @@ export default function RelationshipGraph({ nodes: graphNodes, edges: graphEdges
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Deduplicate nodes and edges by id to prevent vis-data DataSet duplicate key crashes
+    const uniqueNodesMap = new Map<string, GraphNode>();
+    graphNodes.forEach((n) => {
+      if (n && n.id && !uniqueNodesMap.has(n.id)) {
+        uniqueNodesMap.set(n.id, n);
+      }
+    });
+    const uniqueGraphNodes = Array.from(uniqueNodesMap.values());
+
+    const uniqueEdgesMap = new Map<string, import("@/lib/graphData").GraphEdge>();
+    graphEdges.forEach((e) => {
+      if (e && e.id && !uniqueEdgesMap.has(e.id)) {
+        uniqueEdgesMap.set(e.id, e);
+      }
+    });
+    const uniqueGraphEdges = Array.from(uniqueEdgesMap.values());
+
     const nodes = new DataSet(
-      graphNodes.map((n) => ({
+      uniqueGraphNodes.map((n) => ({
         id: n.id,
         label: n.label,
         shape: "dot",
@@ -46,7 +63,7 @@ export default function RelationshipGraph({ nodes: graphNodes, edges: graphEdges
     );
 
     const edges = new DataSet(
-      graphEdges.map((e) => ({
+      uniqueGraphEdges.map((e) => ({
         id: e.id,
         from: e.from,
         to: e.to,
