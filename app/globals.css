@@ -114,8 +114,83 @@
   box-shadow: 0 0 8px rgba(173, 199, 255, 0.3);
 }
 body {
-  background-color: #0a0e17;
+  background-color: var(--color-background, #0a0e17);
+  color: var(--color-on-surface, #dfe2ef);
   font-family: var(--font-inter), sans-serif;
+}
+
+/* =========================================================
+ * THEME 2: PURE BLACK (OLED Dark Mode)
+ * ========================================================= */
+html[data-theme="pure-black"] {
+  --color-background: #000000;
+  --color-surface: #000000;
+  --color-surface-dim: #000000;
+  --color-surface-container-lowest: #000000;
+  --color-surface-container-low: #080808;
+  --color-surface-container: #101010;
+  --color-surface-container-high: #181818;
+  --color-surface-container-highest: #222222;
+  --color-surface-bright: #282828;
+  --color-surface-variant: #1a1a1a;
+  --color-outline: #6b7280;
+  --color-outline-variant: #262626;
+  --color-on-surface: #ffffff;
+  --color-on-background: #ffffff;
+  --color-on-surface-variant: #a3a3a3;
+  --color-primary: #60a5fa;
+  --color-primary-container: #2563eb;
+  --color-on-primary: #000000;
+  --color-on-primary-container: #ffffff;
+}
+
+html[data-theme="pure-black"] body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="pure-black"] .ghost-border {
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+/* =========================================================
+ * THEME 3: PURE WHITE (High Contrast Light Mode)
+ * ========================================================= */
+html[data-theme="pure-white"] {
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-dim: #f8fafc;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container: #f1f5f9;
+  --color-surface-container-high: #e2e8f0;
+  --color-surface-container-highest: #cbd5e1;
+  --color-surface-bright: #e2e8f0;
+  --color-surface-variant: #e2e8f0;
+  --color-outline: #64748b;
+  --color-outline-variant: #e2e8f0;
+  --color-on-surface: #09090b;
+  --color-on-background: #09090b;
+  --color-on-surface-variant: #475569;
+  --color-primary: #1d4ed8;
+  --color-primary-container: #2563eb;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+  --color-inverse-surface: #09090b;
+  --color-inverse-on-surface: #f8fafc;
+}
+
+html[data-theme="pure-white"] body {
+  background-color: #ffffff !important;
+  color: #09090b !important;
+}
+
+html[data-theme="pure-white"] .ghost-border {
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="pure-white"] .glow-hover:hover {
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.2) !important;
 }
 
 .material-symbols-outlined {

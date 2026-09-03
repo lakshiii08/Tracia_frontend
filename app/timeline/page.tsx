@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 import CaseGate from "@/components/CaseGate";
 import { useAppData } from "@/lib/store";
@@ -9,6 +9,7 @@ import { useAppData } from "@/lib/store";
 export default function TimelinePage() {
   const { timelineEvents } = useAppData();
   const [filterCategory, setFilterCategory] = useState<string>("All");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const categories = ["All", "Evidence", "CDR", "Device", "Forensics", "Transfer"];
 
@@ -17,10 +18,14 @@ export default function TimelinePage() {
   );
 
   return (
-    <div className="min-h-screen bg-background text-on-surface">
-      <Navbar title="TRACIA · Timeline Intelligence Module" showSearch />
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <div className="min-h-screen bg-background text-on-surface flex">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title="Timeline Intelligence Module"
+          showSearch
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="min-w-0 flex-1">
           <CaseGate moduleTitle="Timeline Intelligence & Chronology">
             <div className="p-5 lg:p-8">

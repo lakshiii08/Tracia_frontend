@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAppData, type CaseStatus } from "@/lib/store";
-import Navbar from "@/components/Navbar";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 
 export default function CaseWorkspacePage() {
@@ -28,6 +28,7 @@ export default function CaseWorkspacePage() {
   const [name, setName] = useState(currentCase.name);
   const [desc, setDesc] = useState(currentCase.desc);
   const [status, setStatus] = useState<CaseStatus>(currentCase.status);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const save = () => {
     updateCase(currentCase.id, { name, desc, status });
@@ -47,10 +48,13 @@ export default function CaseWorkspacePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-on-surface">
-      <Navbar title={`Case Workspace · ${currentCase.id}`} />
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <div className="min-h-screen bg-background text-on-surface flex">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title={`Case Workspace · ${currentCase.id}`}
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="min-w-0 flex-1 p-5 lg:p-8">
           <div className="mx-auto max-w-7xl space-y-6">
             {/* Header Banner (Section 5 Blueprint) */}

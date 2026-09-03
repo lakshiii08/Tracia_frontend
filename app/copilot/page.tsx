@@ -1,72 +1,64 @@
 "use client";
 
-import { useState } from "react";
-import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 import CaseGate from "@/components/CaseGate";
-
-interface Message {
-  role: "user" | "assistant";
-  text: string;
-  intent?: string;
-  supportingPaths?: string[];
-  sources?: string[];
-}
+import { useAppData } from "@/lib/store";
+import { getCopilotInitialMessages, queryCopilot } from "@/services/api/copilot";
+import type { CopilotMessage } from "@/types/copilot";
 
 export default function CopilotPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      text: "Greetings Inspector. I am TRACIA's AI Investigation Copilot powered by GraphRAG. Ask me any question regarding suspects, call networks, timeline events, or evidence files for the selected case file.",
-    },
-    {
-      role: "user",
-      text: "Show me all high-risk targets connected to the selected case file and their burner phone communications.",
-    },
-    {
-      role: "assistant",
-      text: "Based on multi-hop GraphRAG analysis across Neo4j relationship graphs and ingested CDR logs, **Vikram Sharma** (PER_10023, High Risk) is connected to burner phone **+91 9123456780** with 342s of intercepted call activity on 2025-05-10.",
-      intent: "Graph Search + CDR Analysis",
-      supportingPaths: [
-        "(Vikram Sharma:Person) -[:USES]-> (+91 9876543210:Phone) -[:CONNECTED_TO]-> (+91 9123456780:BurnerPhone)",
-        "(Vikram Sharma:Person) -[:INVOLVED_IN]-> (Case:Active)",
-      ],
-      sources: ["incident_report_01.pdf", "cdr_dump_q1.csv", "Neo4j Graph Node PER_10023"],
-    },
-  ]);
-
+  const { selectedCase } = useAppData();
+  const [messages, setMessages] = useState<CopilotMessage[]>([]);
   const [input, setInput] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleSend = (e: React.FormEvent) => {
+  useEffect(() => {
+    getCopilotInitialMessages().then(setMessages);
+  }, []);
+
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
-
-    const userMsg: Message = { role: "user", text: input.trim() };
-    setMessages((prev) => [...prev, userMsg]);
     const prompt = input.trim();
-    setInput("");
+    if (!prompt) return;
 
-    // Simulate GraphRAG processing response
-    setTimeout(() => {
-      const assistantMsg: Message = {
+    const userMsg: CopilotMessage = { role: "user", text: prompt };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setIsThinking(true);
+
+    try {
+      const res = await queryCopilot(prompt, selectedCase?.id);
+      const assistantMsg: CopilotMessage = {
         role: "assistant",
-        text: `Synthesized response for query "${prompt}": Entity Vikram Sharma maintains a 94% probabilistic match with V. Sharma across FIR documents and CDR call records. SHA-256 hash verified on Blockchain TxID 0x7f8a3291bc40.`,
-        intent: "GraphRAG Vector + Neo4j Search",
-        supportingPaths: [
-          "(Entity:Vikram Sharma) -[:CONFIRMED_MATCH 94%]--------> (Entity:V. Sharma)",
-          "(Case:Active) -[:HAS_EVIDENCE]-> (Evidence:EVD_101) -[:VERIFIED_BY]-> (Blockchain:0x7f8a)",
-        ],
-        sources: ["TRACIA Neo4j Graph Database", "Blockchain Custody Registry", "CDR Analysis Cluster #1"],
+        text: res.text,
+        intent: res.intent,
+        supportingPaths: res.supportingPaths,
+        sources: res.sources,
       };
       setMessages((prev) => [...prev, assistantMsg]);
-    }, 600);
+    } catch {
+      const errorMsg: CopilotMessage = {
+        role: "assistant",
+        text: "Failed to query Copilot reasoning service. Please check network connectivity or backend availability.",
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface flex flex-col">
-      <Navbar title="TRACIA · AI Copilot & GraphRAG Assistant" showSearch />
-      <div className="flex flex-1 min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <div className="min-h-screen bg-background text-on-surface flex">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title="AI Copilot & GraphRAG Assistant"
+          showSearch
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="min-w-0 flex-1 flex flex-col">
           <CaseGate moduleTitle="AI Copilot &amp; GraphRAG Reasoning">
             <div className="p-5 lg:p-8 flex flex-col flex-1">
@@ -146,6 +138,15 @@ export default function CopilotPage() {
                       </div>
                     </div>
                   ))}
+
+                  {isThinking && (
+                    <div className="flex flex-col items-start">
+                      <div className="max-w-3xl rounded-xl p-4 text-xs bg-surface-container-low border border-outline-variant text-on-surface flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                        <span className="text-outline font-mono">GraphRAG agent traversing Neo4j knowledge graph...</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Input Console */}
@@ -159,7 +160,8 @@ export default function CopilotPage() {
                   />
                   <button
                     type="submit"
-                    className="rounded-xl bg-primary px-6 py-3 text-xs font-semibold text-on-primary flex items-center gap-1.5"
+                    disabled={isThinking}
+                    className="rounded-xl bg-primary px-6 py-3 text-xs font-semibold text-on-primary flex items-center gap-1.5 disabled:opacity-60"
                   >
                     <span className="material-symbols-outlined text-[18px]">send</span> Send Query
                   </button>

@@ -16,17 +16,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TRACIA - Operator Authentication",
-  description: "Trace, Relationship & Criminal Intelligence Analytics",
+  title: "TRACIA - Trace, Relationship & Criminal Intelligence Analytics",
+  description: "Trace, Relationship & Criminal Intelligence Analytics Platform",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("tracia_theme")||"default";document.documentElement.setAttribute("data-theme",t);if(t==="pure-white"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light");}else{document.documentElement.classList.add("dark");document.documentElement.classList.remove("light");}}catch(e){}})();`,
+          }}
         />
       </head>
       <body

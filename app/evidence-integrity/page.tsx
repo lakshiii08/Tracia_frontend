@@ -1,16 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 import CaseGate from "@/components/CaseGate";
 import { useAppData } from "@/lib/store";
+import { getChainOfCustodyPipeline } from "@/services/api/blockchain";
+import type { CustodyPipelineStep } from "@/types/blockchain";
 
 export default function EvidenceIntegrityPage() {
   const { evidenceFiles, addEvidenceFiles, blockchainRecords } = useAppData();
   const [activeTab, setActiveTab] = useState<"integrity" | "blockchain">("blockchain");
   const [newFile, setNewFile] = useState("");
   const [fileType, setFileType] = useState("FIR");
+  const [pipelineSteps, setPipelineSteps] = useState<CustodyPipelineStep[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    getChainOfCustodyPipeline().then(setPipelineSteps);
+  }, []);
 
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +28,14 @@ export default function EvidenceIntegrityPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface">
-      <Navbar title="TRACIA · Blockchain Evidence Integrity & Custody" showSearch />
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <div className="min-h-screen bg-background text-on-surface flex">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title="Blockchain Evidence Integrity & Custody"
+          showSearch
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="min-w-0 flex-1">
           <CaseGate moduleTitle="Blockchain Evidence Integrity & Chain of Custody">
             <div className="p-5 lg:p-8">
@@ -79,7 +91,9 @@ export default function EvidenceIntegrityPage() {
                       <div className="flex flex-wrap items-center justify-center gap-4 py-3 font-mono text-xs text-center">
                         <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 p-3">
                           <div className="font-bold text-blue-400">(:Evidence)</div>
-                          <div className="text-[10px] text-outline">incident_report_01.pdf</div>
+                          <div className="text-[10px] text-outline">
+                            {blockchainRecords[0]?.filename || "incident_report_01.pdf"}
+                          </div>
                         </div>
                         <div className="flex flex-col items-center">
                           <span className="text-[10px] font-bold text-emerald-400">VERIFIED_BY</span>
@@ -87,42 +101,31 @@ export default function EvidenceIntegrityPage() {
                         </div>
                         <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3">
                           <div className="font-bold text-emerald-400">(:BlockchainRecord)</div>
-                          <div className="text-[10px] text-outline">0x7f8a3291bc40...</div>
+                          <div className="text-[10px] text-outline">
+                            {blockchainRecords[0]?.txId?.substring(0, 14) || "0x7f8a3291bc40"}...
+                          </div>
                         </div>
                       </div>
                     </section>
 
                     {/* Chain of Custody Pipeline Card */}
-                    <section className="rounded-xl border border-outline-variant bg-surface-container p-5 space-y-4">
-                      <h3 className="font-semibold text-sm">Chain of Custody Handover Log (Section 24 Blueprint)</h3>
-                      <div className="grid gap-3 sm:grid-cols-5 text-center font-mono text-xs">
-                        <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
-                          <div className="font-bold text-primary">Step 1</div>
-                          <div className="text-on-surface font-semibold mt-1">Evidence Collected</div>
-                          <div className="text-[10px] text-outline mt-1">Officer A</div>
+                    {pipelineSteps.length > 0 && (
+                      <section className="rounded-xl border border-outline-variant bg-surface-container p-5 space-y-4">
+                        <h3 className="font-semibold text-sm">Chain of Custody Handover Log (Section 24 Blueprint)</h3>
+                        <div className="grid gap-3 sm:grid-cols-5 text-center font-mono text-xs">
+                          {pipelineSteps.map((step) => (
+                            <div
+                              key={step.stepNumber}
+                              className="rounded-lg border border-outline-variant bg-surface-container-low p-3"
+                            >
+                              <div className="font-bold text-primary">Step {step.stepNumber}</div>
+                              <div className="text-on-surface font-semibold mt-1">{step.title}</div>
+                              <div className="text-[10px] text-outline mt-1">{step.actor}</div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
-                          <div className="font-bold text-primary">Step 2</div>
-                          <div className="text-on-surface font-semibold mt-1">Transferred</div>
-                          <div className="text-[10px] text-outline mt-1">Secure Vault</div>
-                        </div>
-                        <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
-                          <div className="font-bold text-primary">Step 3</div>
-                          <div className="text-on-surface font-semibold mt-1">Forensic Expert</div>
-                          <div className="text-[10px] text-outline mt-1">Expert B</div>
-                        </div>
-                        <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
-                          <div className="font-bold text-primary">Step 4</div>
-                          <div className="text-on-surface font-semibold mt-1">Analysis</div>
-                          <div className="text-[10px] text-outline mt-1">SHA-256 Generated</div>
-                        </div>
-                        <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
-                          <div className="font-bold text-primary">Step 5</div>
-                          <div className="text-on-surface font-semibold mt-1">Court Submission</div>
-                          <div className="text-[10px] text-outline mt-1">Verified Legal Record</div>
-                        </div>
-                      </div>
-                    </section>
+                      </section>
+                    )}
 
                     {/* Blockchain Records List */}
                     <div className="space-y-4">

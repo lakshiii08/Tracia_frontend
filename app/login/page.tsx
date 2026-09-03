@@ -3,15 +3,19 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [operatorId, setOperatorId] = useState("");
   const [cipher, setCipher] = useState("");
   const [rememberId, setRememberId] = useState(true);
   const [showCipher, setShowCipher] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const isLight = theme === "pure-white";
 
   useEffect(() => {
     // Read the remembered Operator ID after mount only — reading localStorage
@@ -65,24 +69,30 @@ export default function LoginPage() {
       <div className="z-10 w-full max-w-md px-4 md:px-0">
         {/* Login Card */}
         <div className="bg-surface-container-low rounded-lg ghost-border p-5 md:p-8 flex flex-col gap-6 relative overflow-hidden backdrop-blur-md">
-          {/* Branding */}
-          <div className="flex flex-col items-center gap-4 text-center">
+          {/* Branding Logo */}
+          <div className="flex flex-col items-center justify-center text-center">
+            {/* Dark / Default Theme: TRACIA_black.png */}
             <Image
-              src="https://lh3.googleusercontent.com/aida/AEtjO1Uobrx15NX-th2SRzR4twNvC0SzcBuxSIkWGKncDvStNkLGKf6Soahde1aAbhW3FtPn3hPT669jjv1yThKgm9NfcAQq2ykzfJ5h19emOPla1iPuD9LhmfyX1wmurh01NRhvtG7tmHzJBKX0YDM5MLKeQIHCojhG3A781cWSbMwkuV8wwumKxkf48N4u-EtQVK1dgsaOM0XLnzrPojDBGKAnHh2-BMZ7mcuWlzGy296b9MTqDs5qxGc"
-              alt="TRACIA Hexagonal Logo"
-              width={96}
-              height={96}
-              className="w-24 h-24 object-contain"
-              unoptimized
+              src="/assets/TRACIA_black.png"
+              alt="TRACIA - Trace, Relationship & Criminal Intelligence Analytics"
+              width={320}
+              height={320}
+              priority
+              className={`w-60 sm:w-68 h-auto object-contain rounded-2xl drop-shadow-lg transition-opacity duration-150 ${
+                isLight ? "hidden" : "block"
+              }`}
             />
-            <div>
-              <h1 className="font-headline-lg text-headline-lg text-on-surface mb-1">
-                TRACIA
-              </h1>
-              <p className="font-body-sm text-body-sm text-on-surface-variant max-w-[280px] mx-auto">
-                Trace, Relationship &amp; Criminal Intelligence Analytics
-              </p>
-            </div>
+            {/* Light Theme: TRACIA_white.png */}
+            <Image
+              src="/assets/TRACIA_white.png"
+              alt="TRACIA - Trace, Relationship & Criminal Intelligence Analytics"
+              width={320}
+              height={320}
+              priority
+              className={`w-60 sm:w-68 h-auto object-contain rounded-2xl drop-shadow-lg transition-opacity duration-150 ${
+                isLight ? "block" : "hidden"
+              }`}
+            />
           </div>
 
           {/* Login Form */}

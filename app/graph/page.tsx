@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppData } from "@/lib/store";
+import { useAuthorization } from "@/auth/useAuthorization";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
+import AppHeader from "@/components/AppHeader";
+import Sidebar from "@/components/Sidebar";
 import CaseGate from "@/components/CaseGate";
 import RelationshipGraph from "@/components/RelationshipGraph";
 import { entityColors, type GraphNode } from "@/lib/graphData";
+import { getDataSourceCounts, getGraphPresets } from "@/services/api/graph";
+import type { DataSourceCounts, GraphPreset } from "@/types/graph";
 
 const legendItems: { type: keyof typeof entityColors; label: string }[] = [
   { type: "person", label: "Person" },
@@ -19,7 +23,10 @@ const legendItems: { type: keyof typeof entityColors; label: string }[] = [
 
 export default function GraphPage() {
   const [selected, setSelected] = useState<GraphNode | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentUser, hasPermission } = useAuthorization();
   const {
+    cases,
     graphNodes,
     graphEdges,
     resolvedEntities,
@@ -37,6 +44,22 @@ export default function GraphPage() {
     "GraphRAG Analysis: Person A acts as a high-centrality hub linking 3 cases, 2 burner phones, and shell co XYZ Logistics."
   );
   const [isCopilotThinking, setIsCopilotThinking] = useState(false);
+  const [dataSources, setDataSources] = useState<DataSourceCounts>({
+    fir: 128,
+    cdr: 2341,
+    financial: 842,
+    location: 1256,
+  });
+  const [presets, setPresets] = useState<GraphPreset[]>([
+    { label: "All Entities", cypher: "MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 100" },
+    { label: "High Risk Targets", cypher: "MATCH (n:Entity {risk: 'high'}) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m" },
+    { label: "Phone Networks", cypher: "MATCH (n:Entity {type: 'phone'}) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m" },
+  ]);
+
+  useEffect(() => {
+    getDataSourceCounts().then(setDataSources);
+    getGraphPresets().then(setPresets);
+  }, []);
 
   const handleCypherSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,12 +67,6 @@ export default function GraphPage() {
       runCypherQuery(cypherInput.trim());
     }
   };
-
-  const presets = [
-    { label: "All Entities", cypher: "MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 100" },
-    { label: "High Risk Targets", cypher: "MATCH (n:Entity {risk: 'high'}) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m" },
-    { label: "Phone Networks", cypher: "MATCH (n:Entity {type: 'phone'}) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m" },
-  ];
 
   const handleSelectNode = (node: GraphNode | null) => {
     setSelected(node);
@@ -73,62 +90,98 @@ export default function GraphPage() {
     }
   };
 
-  return (
-    <div className="bg-background text-on-background font-body-sm min-h-screen flex flex-col overflow-hidden">
-      <Navbar title="TRACIA · Knowledge Graph Module" showSearch />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <CaseGate moduleTitle="Knowledge Graph & Entity Relations">
-          <div className="flex-1 flex overflow-hidden min-h-0 h-full">
-        {/* Left sidebar */}
-        <aside className="w-64 bg-surface-container-low border-r border-outline-variant flex flex-col shrink-0 overflow-y-auto">
-          <div className="p-4 border-b border-outline-variant">
-            <h3 className="text-label-mono font-label-mono font-bold text-on-surface-variant mb-3 uppercase tracking-wider">Data Sources</h3>
-            <div className="space-y-1 text-body-sm text-on-surface-variant">
-              <div className="flex items-center justify-between py-1">
-                <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">description</span>FIR / Documents</span>
-                <span className="font-code-sm text-code-sm">128</span>
+  if (!hasPermission("graph.view")) {
+    return (
+      <div className="min-h-screen bg-background text-on-surface flex">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <AppHeader
+            title="Knowledge Graph & Entity Relations"
+            onToggleSidebar={() => setSidebarOpen(true)}
+          />
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="max-w-md w-full text-center p-8 rounded-xl border border-rose-500/30 bg-surface-container space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl">lock</span>
               </div>
-              <div className="flex items-center justify-between py-1">
-                <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">call</span>CDR Records</span>
-                <span className="font-code-sm text-code-sm">2,341</span>
+              <h1 className="text-xl font-bold text-on-surface">Access Restricted: 403 Forbidden</h1>
+              <p className="text-sm text-outline">
+                The Knowledge Graph &amp; Entity Relationships module is restricted to Investigator, Analyst, and Administrator clearance roles.
+              </p>
+              <div className="rounded-lg bg-surface-container-low p-3 text-xs font-mono text-on-surface-variant">
+                Current Role: <span className="font-bold text-amber-400">{currentUser.role}</span>
+              </div>
+              <div>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-on-primary hover:bg-primary-fixed"
+                >
+                  Return to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-on-surface flex overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <AppHeader
+          title="Knowledge Graph & Entity Relations"
+          showSearch
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <CaseGate moduleTitle="Knowledge Graph & Entity Relations">
+            <div className="flex-1 flex overflow-hidden min-h-0 h-full">
+              {/* Left sidebar */}
+              <aside className="w-64 bg-surface-container-low border-r border-outline-variant flex flex-col shrink-0 overflow-y-auto">
+                <div className="p-4 border-b border-outline-variant">
+                  <h3 className="text-label-mono font-label-mono font-bold text-on-surface-variant mb-3 uppercase tracking-wider">Data Sources</h3>
+                  <div className="space-y-1 text-body-sm text-on-surface-variant">
+                    <div className="flex items-center justify-between py-1">
+                      <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">description</span>FIR / Documents</span>
+                      <span className="font-code-sm text-code-sm">{dataSources.fir.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">call</span>CDR Records</span>
+                <span className="font-code-sm text-code-sm">{dataSources.cdr.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between py-1">
                 <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">account_balance</span>Financial Records</span>
-                <span className="font-code-sm text-code-sm">842</span>
+                <span className="font-code-sm text-code-sm">{dataSources.financial.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between py-1">
                 <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">location_on</span>Location Data</span>
-                <span className="font-code-sm text-code-sm">1,256</span>
+                <span className="font-code-sm text-code-sm">{dataSources.location.toLocaleString()}</span>
               </div>
             </div>
           </div>
           <div className="p-4 flex-1 flex flex-col overflow-hidden">
             <h3 className="text-label-mono font-label-mono font-bold text-on-surface-variant uppercase tracking-wider mb-3">Cases</h3>
             <div className="space-y-2 overflow-y-auto flex-1 pr-1">
-              <Link href="/case/nightfall" className="block bg-primary-container/20 border-l-2 border-primary p-2 rounded-r-md cursor-pointer">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-primary text-[16px] mt-0.5">folder_shared</span>
-                    <div>
-                      <div className="text-body-sm font-semibold text-primary">Case #101</div>
-                      <div className="text-[12px] text-on-surface-variant">Kidnapping & Extortion</div>
+              {cases.map((c) => (
+                <Link
+                  key={c.id}
+                  href={c.href || `/case/${c.id}`}
+                  className="block bg-surface-container/50 border-l-2 border-primary/50 hover:border-primary p-2 rounded-r-md cursor-pointer transition-colors"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-2">
+                      <span className="material-symbols-outlined text-primary text-[16px] mt-0.5">{c.icon || "folder"}</span>
+                      <div>
+                        <div className="text-body-sm font-semibold text-primary">{c.name}</div>
+                        <div className="text-[12px] text-on-surface-variant">{c.id} · {c.desc}</div>
+                      </div>
                     </div>
+                    <span className="font-code-sm text-[11px] text-on-surface-variant">{c.date}</span>
                   </div>
-                  <span className="font-code-sm text-[11px] text-on-surface-variant">10 May 2025</span>
-                </div>
-              </Link>
-              <div className="p-2 rounded-md hover:bg-surface-variant cursor-pointer transition-colors">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-on-surface-variant text-[16px] mt-0.5">description</span>
-                    <div>
-                      <div className="text-body-sm text-on-surface">Case #209</div>
-                      <div className="text-[12px] text-on-surface-variant">Cyber Fraud</div>
-                    </div>
-                  </div>
-                  <span className="font-code-sm text-[11px] text-on-surface-variant">22 Apr 2025</span>
-                </div>
-              </div>
+                </Link>
+              ))}
             </div>
 
             {/* AI Copilot & Relation Link Key Insights Section */}
@@ -285,7 +338,7 @@ export default function GraphPage() {
             <div className="mt-4 p-3 bg-surface-variant rounded-lg flex items-center justify-between">
               <div>
                 <div className="text-label-mono font-label-mono text-on-surface-variant">Cross-Case Links</div>
-                <div className="text-headline-md font-headline-md font-bold text-primary">17 <span className="text-body-sm font-normal text-on-surface-variant">Connections</span></div>
+                <div className="text-headline-md font-headline-md font-bold text-primary">{graphEdges.length} <span className="text-body-sm font-normal text-on-surface-variant">Connections</span></div>
               </div>
               <Link href="/analytics" className="text-primary text-[12px] hover:underline">View All</Link>
             </div>
@@ -573,9 +626,10 @@ export default function GraphPage() {
             </>
           )}
         </aside>
+            </div>
+          </CaseGate>
+        </div>
       </div>
-    </CaseGate>
-  </div>
-</div>
+    </div>
   );
 }

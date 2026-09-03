@@ -1,23 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
+import { useState } from "react";
+import AppHeader from "@/components/AppHeader";
 import Sidebar from "@/components/Sidebar";
 import CaseGate from "@/components/CaseGate";
 import { useAppData } from "@/lib/store";
 
 export default function EntityResolutionPage() {
   const { entityQueue, totalEntityMatches, resolveEntity } = useAppData();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const reviewed = totalEntityMatches - entityQueue.length;
   const progressPct = totalEntityMatches ? Math.round((reviewed / totalEntityMatches) * 100) : 100;
   const current = entityQueue[0];
   const upcoming = entityQueue.slice(1);
 
   return (
-    <div className="bg-background text-on-surface font-body-md antialiased min-h-screen flex flex-col">
-      <Navbar title="TRACIA · Entity Resolution Module" showSearch />
-      <div className="flex flex-1 min-h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <div className="min-h-screen bg-background text-on-surface flex">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppHeader
+          title="Entity Resolution & Record Matching"
+          showSearch
+          onToggleSidebar={() => setSidebarOpen(true)}
+        />
         <main className="flex-1 min-w-0">
           <CaseGate moduleTitle="Entity Resolution &amp; Record Matching">
             <div className="p-6 w-full relative">

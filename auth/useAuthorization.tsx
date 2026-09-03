@@ -42,28 +42,32 @@ function mapSessionToUser(operatorId: string, role: string): User {
   const normId = operatorId.trim().toUpperCase();
   const normRole = role.trim().toUpperCase();
 
-  if (normId === "TRACIA-ADMIN" || normRole === "ADMIN") {
+  if (normId === "ADMIN" || normId === "TRACIA-ADMIN" || normRole === "ADMIN") {
     return MOCK_USERS[0]; // Admin
   }
-  if (normId === "INVESTIGATOR-01" || normRole === "INVESTIGATOR") {
+  if (normId === "INVESTIGATOR" || normId === "INVESTIGATOR-01" || normRole === "INVESTIGATOR" || normRole === "INVESTIGATING_OFFICER") {
     return MOCK_USERS[1]; // IO-101 (Det. J. Smith)
   }
-  if (normId === "ANALYST-01" || normRole === "ANALYST") {
+  if (normId === "ANALYST" || normId === "ANALYST-01" || normRole === "ANALYST" || normRole === "INTELLIGENCE_OFFICER") {
     return {
       id: "ANALYST-01",
       name: "Analyst C. Patel",
       role: "INTELLIGENCE_OFFICER",
       badgeNumber: "ANL-8001",
       department: "Intelligence & Graph Analysis",
+      clearanceLevel: "LEVEL 02",
+      status: "Active",
     };
   }
-  if (normId === "AUDITOR-01" || normRole === "AUDITOR") {
+  if (normId === "AUDITOR" || normId === "AUDITOR-01" || normRole === "AUDITOR") {
     return {
       id: "AUDITOR-01",
       name: "Auditor K. Roy",
       role: "AUDITOR",
       badgeNumber: "AUD-5001",
       department: "Compliance & Security Audit",
+      clearanceLevel: "LEVEL 03",
+      status: "Active",
     };
   }
 
