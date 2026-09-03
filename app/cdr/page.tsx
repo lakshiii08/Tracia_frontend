@@ -57,24 +57,23 @@ export default function CdrAnalysisPage() {
                 {/* Header banner */}
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <div className="font-label-mono text-xs text-primary">COMMUNICATION INTELLIGENCE LAYER</div>
-                    <h1 className="text-3xl font-bold">CDR Analysis Engine</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold">CDR Analysis Engine</h1>
                     <p className="mt-1 text-sm text-on-surface-variant">
-                      Transform authorized Call Detail Records (CDR) into communication relationship networks, temporal call clusters, and cross-case overlaps.
+                      Analyze Call Detail Records to map communication frequencies, relay chains, and cross-case target overlaps.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                    <span className="rounded-full border border-outline-variant bg-surface-container-high px-3 py-1 text-xs font-semibold text-on-surface">
                       {cdrRecords.length} Intercepted Calls Loaded
                     </span>
                   </div>
                 </div>
 
-                {/* Network Chain Diagram (Section 20 Blueprint) */}
+                {/* Network Chain Diagram */}
                 {relayChain && relayChain.nodes.length > 0 && (
                   <section className="rounded-xl border border-outline-variant bg-surface-container p-5">
-                    <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-on-surface-variant font-label-mono">
-                      Call Relay Chain &amp; Cluster Analysis (Section 20 Blueprint)
+                    <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-outline">
+                      Call Relay Chain &amp; Cluster Analysis
                     </h2>
                     <div className="flex flex-wrap items-center justify-center gap-4 py-4 font-mono text-xs">
                       {relayChain.nodes.map((node, idx) => {

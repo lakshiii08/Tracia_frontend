@@ -41,24 +41,23 @@ export default function CyberIntelPage() {
                 {/* Header banner */}
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <div className="font-label-mono text-xs text-primary">CYBER THREAT MONITORING LAYER</div>
-                    <h1 className="text-3xl font-bold">Cybercrime Intelligence</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold">Cyber Intelligence</h1>
                     <p className="mt-1 text-sm text-on-surface-variant">
-                      Correlate authorized digital indicators (IP addresses, MAC addresses, device hardware IDs, TOR exit nodes, and cyber events) with case suspects.
+                      Correlate authorized digital indicators (IP addresses, device identifiers, and network telemetry) with case entities.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1.5 text-xs font-bold text-purple-400">
+                    <span className="rounded-full border border-outline-variant bg-surface-container-high px-3 py-1.5 text-xs font-semibold text-on-surface">
                       {cyberEvents.length} Active Cyber Indicators
                     </span>
                   </div>
                 </div>
 
-                {/* Relationship Flow Schema (Section 27 Blueprint) */}
+                {/* Relationship Flow Schema */}
                 {cyberChain && cyberChain.nodes.length > 0 && (
                   <section className="rounded-xl border border-outline-variant bg-surface-container p-5">
-                    <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-on-surface-variant font-label-mono">
-                      Cyber Graph Relationship Chain (Section 27 Blueprint)
+                    <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-outline">
+                      Cyber Entity Correlation Chain
                     </h2>
                     <div className="flex flex-wrap items-center justify-center gap-3 py-3 font-mono text-xs text-center">
                       {cyberChain.nodes.map((node, idx) => {

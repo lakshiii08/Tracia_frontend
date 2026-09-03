@@ -36,14 +36,9 @@ export default function AppHeader({
       {/* Left: Page Title & Active Case File */}
       <div className="flex items-center gap-4 min-w-0">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="truncate font-bold text-sm text-on-surface sm:text-base">{title}</h1>
-            <span className="hidden sm:inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] font-mono text-outline">
-            <span className="text-primary font-semibold">TRACIA</span>
-            <span>//</span>
-            <span>SECURE TERMINAL</span>
+          <h1 className="truncate font-semibold text-sm text-on-surface sm:text-base">{title}</h1>
+          <div className="text-[11px] text-outline">
+            TRACIA Intelligence Platform
           </div>
         </div>
 
@@ -53,14 +48,14 @@ export default function AppHeader({
             onClick={() => setCaseDropdownOpen(!caseDropdownOpen)}
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
               selectedCase
-                ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-                : "border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
+                ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+                : "border-outline-variant bg-surface-container text-on-surface-variant hover:border-primary/40"
             }`}
           >
             <span className="material-symbols-outlined text-[15px]">
-              {selectedCase ? "folder_open" : "warning"}
+              folder_open
             </span>
-            <span className="max-w-[160px] truncate font-mono">
+            <span className="max-w-[160px] truncate font-medium">
               {selectedCase ? `${selectedCase.id}` : "Select Case"}
             </span>
             <span className="material-symbols-outlined text-[15px]">arrow_drop_down</span>

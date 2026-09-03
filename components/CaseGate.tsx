@@ -17,29 +17,24 @@ export default function CaseGate({
     return (
       <div className="min-h-screen bg-background text-on-surface p-4 sm:p-8 flex flex-col justify-center items-center">
         <div className="w-full max-w-4xl space-y-6">
-          {/* Header Warning */}
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6 text-center space-y-3 shadow-xl">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-              <span className="material-symbols-outlined text-[32px]">folder_special</span>
+          {/* Header Context */}
+          <div className="rounded-xl border border-outline-variant bg-surface-container p-6 text-center space-y-2 shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span className="material-symbols-outlined text-[28px]">folder_open</span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-on-surface">
-              Case File Selection Required
+            <h1 className="text-xl font-bold tracking-tight text-on-surface">
+              Select a Case to View {moduleTitle}
             </h1>
-            <p className="text-sm text-on-surface-variant max-w-2xl mx-auto">
-              Access to <span className="font-semibold text-primary">{moduleTitle}</span> (including Case Records, Communication CDR Traces, Timeline Events, Evidence Custody &amp; Graph Intelligence) requires an active Case File selection.
+            <p className="text-xs text-on-surface-variant max-w-xl mx-auto">
+              This module operates within the context of an active investigation. Select a case file below to load associated records, intelligence graphs, and custody trails.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-md bg-surface-container-high px-3 py-1 text-xs font-mono text-amber-300 border border-amber-500/20">
-              <span className="material-symbols-outlined text-[14px]">lock</span>
-              STATUS: CASE RESTRICTED — SELECT A CASE FILE TO UNLOCK
-            </div>
           </div>
 
           {/* Case Directory Grid */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[20px]">folder_open</span>
-                Select an Authorized Case File ({cases.length} Available)
+              <h2 className="text-sm font-semibold text-on-surface flex items-center gap-2">
+                Available Case Files ({cases.length})
               </h2>
             </div>
 
@@ -107,33 +102,32 @@ export default function CaseGate({
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col min-h-0 min-w-0">
+    <div className="w-full flex-1 flex flex-col min-h-0 min-w-0 h-full overflow-hidden">
       {/* Active Case Context Bar */}
-      <div className="shrink-0 bg-surface-container-high border-b border-outline-variant px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm z-30">
+      <div className="shrink-0 bg-surface-container border-b border-outline-variant px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm z-30">
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5 font-bold text-primary bg-primary/10 px-2.5 py-1 rounded border border-primary/30">
-            <span className="material-symbols-outlined text-[16px]">folder_open</span>
-            <span>ACTIVE CASE FILE: {selectedCase.id} — {selectedCase.name}</span>
+          <div className="flex items-center gap-1.5 font-semibold text-on-surface bg-surface-container-high px-2.5 py-1 rounded-lg border border-outline-variant">
+            <span className="material-symbols-outlined text-[16px] text-primary">folder_open</span>
+            <span>Case {selectedCase.id}: {selectedCase.name}</span>
           </div>
 
           <div className="flex items-center gap-1.5 text-on-surface-variant">
-            <span className="material-symbols-outlined text-[15px] text-primary">badge</span>
-            <span className="font-semibold text-on-surface">Assignees:</span>
+            <span className="text-outline">Assigned:</span>
             <div className="flex items-center gap-1">
               {selectedCase.assignees && selectedCase.assignees.length > 0 ? (
                 selectedCase.assignees.map((a, i) => (
-                  <span key={i} className="bg-surface-variant px-2 py-0.5 rounded text-[11px] font-medium text-on-surface">
-                    {a.name} ({a.role})
+                  <span key={i} className="bg-surface-container-high px-2 py-0.5 rounded text-[11px] font-medium text-on-surface border border-outline-variant/50">
+                    {a.name}
                   </span>
                 ))
               ) : (
-                <span className="bg-surface-variant px-2 py-0.5 rounded text-[11px]">Inspector A.</span>
+                <span className="bg-surface-container-high px-2 py-0.5 rounded text-[11px] text-outline">Inspector A.</span>
               )}
             </div>
           </div>
 
-          <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-            ● {selectedCase.status}
+          <span className="rounded border border-outline-variant bg-surface-container-high px-2 py-0.5 text-[11px] font-medium text-on-surface-variant">
+            {selectedCase.status}
           </span>
         </div>
 
@@ -198,7 +192,7 @@ export default function CaseGate({
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-0 min-w-0">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 h-full overflow-hidden">
         {children}
       </div>
     </div>

@@ -22,38 +22,31 @@ export default function TimelinePage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <AppHeader
-          title="Timeline Intelligence Module"
-          showSearch
+          title="Timeline Intelligence"
           onToggleSidebar={() => setSidebarOpen(true)}
         />
         <main className="min-w-0 flex-1">
-          <CaseGate moduleTitle="Timeline Intelligence & Chronology">
+          <CaseGate moduleTitle="Timeline Intelligence &amp; Chronology">
             <div className="p-5 lg:p-8">
               <div className="mx-auto max-w-7xl space-y-6">
                 {/* Header banner */}
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <div className="font-label-mono text-xs text-primary">AUTOMATED CASE RECONSTRUCTION</div>
-                    <h1 className="text-3xl font-bold">Timeline Intelligence</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold">Timeline Intelligence</h1>
                     <p className="mt-1 text-sm text-on-surface-variant">
-                      Chronological event reconstruction connecting evidence collection, call detail logs, device telemetry, forensic reports, and custody handovers.
+                      Chronological event reconstruction connecting evidence collection, call detail logs, device telemetry, and forensic reports.
                     </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs text-primary font-mono">
-                      Active Case Chronology
-                    </span>
                   </div>
                 </div>
 
                 {/* Category Filter Pills */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                  <span className="text-xs text-outline font-label-mono uppercase mr-2">Filter Category:</span>
+                  <span className="text-xs text-outline uppercase mr-2 font-medium">Category:</span>
                   {categories.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setFilterCategory(cat)}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                         filterCategory === cat
                           ? "bg-primary text-on-primary"
                           : "border border-outline-variant bg-surface-container hover:border-primary/50 text-on-surface-variant"
@@ -64,7 +57,7 @@ export default function TimelinePage() {
                   ))}
                 </div>
 
-                {/* Vertical Interactive Timeline View (Section 21 Blueprint) */}
+                {/* Vertical Interactive Timeline View */}
                 <div className="relative border-l-2 border-outline-variant/60 ml-4 pl-6 space-y-8 py-2">
                   {filteredEvents.map((evt) => {
                     const categoryColor: Record<string, string> = {

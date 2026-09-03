@@ -57,39 +57,39 @@ export default function CaseWorkspacePage() {
         />
         <main className="min-w-0 flex-1 p-5 lg:p-8">
           <div className="mx-auto max-w-7xl space-y-6">
-            {/* Header Banner (Section 5 Blueprint) */}
+            {/* Header Banner */}
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
               <div>
-                <div className="mb-1 font-label-mono text-xs font-bold text-primary">
-                  CASE #{currentCase.id} · CONTROLLED INVESTIGATION WORKSPACE
+                <div className="mb-1 text-xs font-mono text-primary font-semibold">
+                  Case {currentCase.id}
                 </div>
-                <h1 className="text-3xl font-bold">{currentCase.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{currentCase.name}</h1>
                 <p className="mt-1 max-w-3xl text-sm text-on-surface-variant">{currentCase.desc}</p>
                 
                 {/* Assignees Header Badge */}
                 <div className="mt-3 flex items-center gap-2 text-xs text-on-surface-variant">
                   <span className="material-symbols-outlined text-[16px] text-primary">badge</span>
-                  <span className="font-bold text-on-surface">Assigned Investigators:</span>
+                  <span className="font-semibold text-on-surface">Assigned:</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {currentCase.assignees && currentCase.assignees.length > 0 ? (
                       currentCase.assignees.map((a, idx) => (
-                        <span key={idx} className="rounded bg-surface-container-high border border-outline-variant px-2.5 py-0.5 text-xs font-semibold text-on-surface">
-                          {a.name} <span className="text-[10px] text-outline font-normal">({a.role})</span>
+                        <span key={idx} className="rounded-md bg-surface-container-high border border-outline-variant px-2.5 py-0.5 text-xs font-medium text-on-surface">
+                          {a.name} <span className="text-[10px] text-outline">({a.role})</span>
                         </span>
                       ))
                     ) : (
-                      <span className="rounded bg-surface-container-high border border-outline-variant px-2 py-0.5 text-xs">Inspector A. Admin</span>
+                      <span className="rounded-md bg-surface-container-high border border-outline-variant px-2 py-0.5 text-xs">Inspector A. Admin</span>
                     )}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                   {currentCase.status}
                 </span>
                 <button
                   onClick={() => setEditing(!editing)}
-                  className="rounded-lg border border-outline-variant px-3.5 py-1.5 text-xs font-semibold hover:border-primary/50"
+                  className="rounded-lg border border-outline-variant px-3.5 py-1.5 text-xs font-semibold hover:border-primary/50 transition"
                 >
                   <span className="material-symbols-outlined mr-1 align-middle text-[16px]">edit</span>
                   Edit Case
@@ -126,7 +126,7 @@ export default function CaseWorkspacePage() {
               </section>
             )}
 
-            {/* Tabbed Navigation Bar (Section 5 Blueprint) */}
+            {/* Tabbed Navigation Bar */}
             <div className="flex items-center gap-1 border-b border-outline-variant overflow-x-auto pb-1">
               {tabs.map(tab => (
                 <button
@@ -139,7 +139,7 @@ export default function CaseWorkspacePage() {
                   }`}
                 >
                   <span className="material-symbols-outlined text-[17px]">{tab.icon}</span>
-                  [{tab.label}]
+                  {tab.label}
                 </button>
               ))}
             </div>

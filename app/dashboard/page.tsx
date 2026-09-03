@@ -108,20 +108,12 @@ function DashboardInner() {
           onToggleSidebar={() => setSidebarOpen(true)}
         />
         <main className="flex-1 flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-          {/* Active Session & Role Banner */}
-          <section className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-outline-variant pb-4">
+          {/* Header */}
+          <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-outline-variant pb-4">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="rounded bg-primary/10 border border-primary/30 px-2 py-0.5 text-xs font-mono font-bold text-primary">
-                  ACTIVE USER: {currentUser.name}
-                </span>
-                <span className="rounded bg-surface-container-high px-2 py-0.5 text-xs font-mono text-on-surface border border-outline-variant">
-                  ROLE: {currentUser.role}
-                </span>
-              </div>
-              <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface">Case Directory &amp; RBAC Access Control</h1>
-              <p className="mt-1 font-label-mono text-xs text-on-surface-variant">
-                Graph-Aware access control enforcement. Select a Case File to unlock linked intelligence, CDR traces &amp; records.
+              <h1 className="text-2xl font-bold text-on-surface">Case Directory</h1>
+              <p className="mt-1 text-xs text-on-surface-variant">
+                Role-based case management and intelligence repository. Select an investigation to open its workspace.
               </p>
             </div>
 
@@ -129,9 +121,9 @@ function DashboardInner() {
               {hasPermission("cases.assign") && (
                 <Link
                   href="/case/new"
-                  className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-on-primary hover:bg-primary-fixed transition shadow-md"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-on-primary hover:bg-primary-container transition shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-[18px]">add</span>New Case
+                  <span className="material-symbols-outlined text-[16px]">add</span>New Case
                 </Link>
               )}
             </div>
@@ -331,10 +323,9 @@ function DashboardInner() {
             <AccessRequestsTable />
           )}
 
-          <footer className="flex flex-col gap-2 border-t border-surface-variant/30 pt-6 font-label-mono text-xs text-outline/60 sm:flex-row sm:items-center sm:justify-between">
-            <span>[TERMINAL_ID: ALPHA_77]</span>
-            <span>DATA_STREAM: ENCRYPTED_AES256</span>
-            <span>TRACIA RBAC Architecture Active</span>
+          <footer className="flex flex-col gap-2 border-t border-surface-variant/30 pt-6 text-xs text-outline sm:flex-row sm:items-center sm:justify-between">
+            <span>TRACIA Intelligence Platform</span>
+            <span>Audited &amp; Encrypted Session</span>
           </footer>
         </main>
       </div>

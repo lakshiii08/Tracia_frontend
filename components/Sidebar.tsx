@@ -31,7 +31,6 @@ export default function Sidebar({
   const { currentUser, hasPermission } = useAuthorization();
   const { theme } = useTheme();
   const [caseDropdownOpen, setCaseDropdownOpen] = useState(false);
-  const [sidebarSearch, setSidebarSearch] = useState("");
 
   const caseHref = selectedCase ? `/case/${selectedCase.id}` : "/case/TR-102";
 
@@ -43,7 +42,7 @@ export default function Sidebar({
     { id: "cdr", href: "/cdr", icon: "call", label: "CDR Analysis", requiresCase: true },
     { id: "timeline", href: "/timeline", icon: "timeline", label: "Timeline Intelligence", requiresCase: true },
     { id: "evidence-integrity", href: "/evidence-integrity", icon: "verified", label: "Evidence & Custody", requiresCase: true, requiredPermission: "evidence.view" },
-    { id: "copilot", href: "/copilot", icon: "smart_toy", label: "AI Copilot & GraphRAG", requiresCase: true },
+    { id: "copilot", href: "/copilot", icon: "smart_toy", label: "Intelligence Copilot", requiresCase: true },
     { id: "cyber-intel", href: "/cyber-intel", icon: "security", label: "Cyber Intelligence", requiresCase: true },
     { id: "audit-log", href: "/audit-log", icon: "history", label: "Audit & Security Logs", requiresCase: true, requiredPermission: "audit.view" },
     { id: "analytics", href: "/analytics", icon: "insights", label: "Graph Analytics", requiresCase: false },
@@ -60,10 +59,6 @@ export default function Sidebar({
     }
   };
 
-  const filteredItems = items.filter((item) =>
-    !sidebarSearch.trim() || item.label.toLowerCase().includes(sidebarSearch.toLowerCase())
-  );
-
   return (
     <aside className="w-64 shrink-0 h-screen sticky top-0 flex flex-col border-r border-outline-variant bg-surface-container-lowest text-on-surface z-40 select-none">
       {/* 1. Header & Brand */}
@@ -77,10 +72,7 @@ export default function Sidebar({
             className="object-contain object-left"
           />
         </Link>
-        <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[9px] font-mono font-bold text-emerald-400">ONLINE</span>
-        </div>
+        <span className="h-2 w-2 rounded-full bg-emerald-500" title="System operational" />
       </div>
 
       {/* 2. Operator Profile Info */}
@@ -196,33 +188,9 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* 4. Quick Module Search */}
-      <div className="px-3 pt-2 shrink-0">
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-outline text-[14px]">
-            search
-          </span>
-          <input
-            type="text"
-            value={sidebarSearch}
-            onChange={(e) => setSidebarSearch(e.target.value)}
-            placeholder="Search modules..."
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-1 pl-7 pr-2.5 text-[11px] text-on-surface outline-none focus:border-primary"
-          />
-          {sidebarSearch && (
-            <button
-              onClick={() => setSidebarSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-outline hover:text-on-surface"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 5. Navigation Items (Scrollable) */}
+      {/* 4. Navigation Items (Scrollable) */}
       <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5" aria-label="Workspace Modules">
-        {filteredItems.map((item) => {
+        {items.map((item) => {
           const isPermitted = !item.requiredPermission || hasPermission(item.requiredPermission);
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
@@ -237,8 +205,8 @@ export default function Sidebar({
                   <span className="material-symbols-outlined text-[16px] opacity-40">{item.icon}</span>
                   <span className="line-through opacity-60 truncate">{item.label}</span>
                 </div>
-                <span className="rounded bg-rose-500/10 px-1 py-0.2 text-[8px] font-mono font-bold text-rose-400">
-                  LOCK
+                <span className="rounded bg-surface-variant px-1.5 py-0.5 text-[9px] font-mono text-outline">
+                  Restricted
                 </span>
               </div>
             );
@@ -251,7 +219,7 @@ export default function Sidebar({
               className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition ${
                 isActive
                   ? "bg-primary/10 font-bold text-primary border-l-2 border-primary"
-                  : "text-on-surface-variant hover:bg-surface-container hover:text-primary"
+                  : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -259,7 +227,7 @@ export default function Sidebar({
                 <span className="truncate">{item.label}</span>
               </div>
               {item.requiresCase && !selectedCase && (
-                <span className="material-symbols-outlined text-[12px] text-amber-400 shrink-0" title="Case file required">
+                <span className="material-symbols-outlined text-[12px] text-outline shrink-0" title="Case file required">
                   lock
                 </span>
               )}
@@ -268,23 +236,20 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* 6. Bottom Utility Actions */}
+      {/* 5. Bottom Utility Actions */}
       <div className="border-t border-outline-variant p-2.5 space-y-0.5 shrink-0 bg-surface-container-lowest">
         <Link
           href="/alerts"
           className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition ${
             pathname === "/alerts"
               ? "bg-primary/10 font-bold text-primary border-l-2 border-primary"
-              : "text-on-surface-variant hover:bg-surface-container hover:text-primary"
+              : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
           }`}
         >
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[17px]">notifications</span>
             <span>Alerts &amp; Feed</span>
           </div>
-          <span className="rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.2 text-[8px] font-mono font-bold">
-            NEW
-          </span>
         </Link>
 
         <Link
@@ -292,14 +257,13 @@ export default function Sidebar({
           className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition ${
             pathname === "/settings"
               ? "bg-primary/10 font-bold text-primary border-l-2 border-primary"
-              : "text-on-surface-variant hover:bg-surface-container hover:text-primary"
+              : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
           }`}
         >
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[17px]">settings</span>
             <span>Settings</span>
           </div>
-          <span className="text-[9px] text-outline font-mono">Theme / UI</span>
         </Link>
 
         <button
@@ -313,11 +277,6 @@ export default function Sidebar({
           </div>
           <span className="material-symbols-outlined text-[13px]">chevron_right</span>
         </button>
-
-        <div className="pt-1.5 px-1 text-[9px] font-mono text-outline flex items-center justify-between">
-          <span>ALPHA_77 // REGION-04</span>
-          <span className="text-emerald-400">SECURE</span>
-        </div>
       </div>
     </aside>
   );
