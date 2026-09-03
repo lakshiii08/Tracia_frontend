@@ -3,30 +3,44 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type ThemeMode = "default" | "pure-black" | "pure-white";
+export type AccentColor = "blue" | "red" | "yellow" | "green";
 
 interface ThemeContextValue {
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
+  accent: AccentColor;
+  setAccent: (accent: AccentColor) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const STORAGE_KEY = "tracia_theme";
+const STORAGE_ACCENT_KEY = "tracia_accent";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("default");
+  const [accent, setAccentState] = useState<AccentColor>("blue");
 
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-      if (saved && (saved === "default" || saved === "pure-black" || saved === "pure-white")) {
-        setThemeState(saved);
-        applyTheme(saved);
+      const savedTheme = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
+      if (savedTheme && (savedTheme === "default" || savedTheme === "pure-black" || savedTheme === "pure-white")) {
+        setThemeState(savedTheme);
+        applyTheme(savedTheme);
       } else {
         applyTheme("default");
       }
+
+      const savedAccent = window.localStorage.getItem(STORAGE_ACCENT_KEY) as AccentColor | null;
+      if (savedAccent && (savedAccent === "blue" || savedAccent === "red" || savedAccent === "yellow" || savedAccent === "green")) {
+        setAccentState(savedAccent);
+        applyAccent(savedAccent);
+      } else {
+        applyAccent("blue");
+      }
     } catch {
       applyTheme("default");
+      applyAccent("blue");
     }
   }, []);
 
@@ -42,6 +56,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const applyAccent = (color: AccentColor) => {
+    const root = document.documentElement;
+    root.setAttribute("data-accent", color);
+  };
+
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
     applyTheme(newTheme);
@@ -50,8 +69,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
+  const setAccent = (newAccent: AccentColor) => {
+    setAccentState(newAccent);
+    applyAccent(newAccent);
+    try {
+      window.localStorage.setItem(STORAGE_ACCENT_KEY, newAccent);
+    } catch {}
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, accent, setAccent }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -4,10 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import AppHeader from "@/components/AppHeader";
-import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
+import { useTheme, type ThemeMode, type AccentColor } from "@/components/ThemeProvider";
 
 export default function SettingsPage() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, accent, setAccent } = useTheme();
   const [compact, setCompact] = useState(false);
   const [autoSave, setAutoSave] = useState(true);
   const [sessionTimeout, setSessionTimeout] = useState("30");
@@ -61,6 +61,38 @@ export default function SettingsPage() {
     },
   ];
 
+  const accentColors: {
+    id: AccentColor;
+    name: string;
+    description: string;
+    swatchColor: string;
+  }[] = [
+    {
+      id: "blue",
+      name: "Tactical Blue",
+      description: "Default operational intelligence blue with crisp tactical contrast.",
+      swatchColor: "#3b82f6",
+    },
+    {
+      id: "red",
+      name: "Crimson Red",
+      description: "High-alert crimson red for critical findings, investigations, and high-risk flags.",
+      swatchColor: "#ef4444",
+    },
+    {
+      id: "yellow",
+      name: "Amber Gold",
+      description: "High-visibility tactical surveillance amber for alert monitoring and warnings.",
+      swatchColor: "#f59e0b",
+    },
+    {
+      id: "green",
+      name: "Emerald Green",
+      description: "Terminal cyber green aesthetic for verified evidence, telemetry, and forensics.",
+      swatchColor: "#10b981",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-on-surface flex">
       {/* Persistent Left Navigation */}
@@ -92,7 +124,7 @@ export default function SettingsPage() {
                 </Link>
                 <h1 className="mt-2 text-3xl font-bold">Workspace Settings</h1>
                 <p className="mt-1 text-sm text-outline">
-                  Configure visual theme modes, session parameters, and workspace preferences for this terminal.
+                  Configure visual theme modes, accent colors, session parameters, and workspace preferences.
                 </p>
               </div>
               <Link
@@ -106,7 +138,7 @@ export default function SettingsPage() {
 
             <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
               <div className="space-y-6">
-                {/* Theme Selector Section */}
+                {/* 1. Theme Selector Section */}
                 <section className="rounded-xl border border-outline-variant bg-surface-container p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -184,7 +216,71 @@ export default function SettingsPage() {
                   </div>
                 </section>
 
-                {/* Workspace Density & Preferences */}
+                {/* 2. Accent Color Selector Section */}
+                <section className="rounded-xl border border-outline-variant bg-surface-container p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="font-bold text-base flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-[20px]">brush</span>
+                        <span>Accent Color</span>
+                      </h2>
+                      <p className="mt-1 text-xs text-outline">
+                        Select your primary UI accent color for active buttons, indicators, tabs, and focus highlights.
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-primary/10 border border-primary/30 px-2.5 py-0.5 text-xs font-mono font-bold text-primary uppercase">
+                      ACCENT: {accent}
+                    </span>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 pt-2">
+                    {accentColors.map((c) => {
+                      const isSelected = accent === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setAccent(c.id)}
+                          className={`relative rounded-xl border p-4 text-left transition-all flex flex-col justify-between group ${
+                            isSelected
+                              ? "border-primary ring-2 ring-primary/40 bg-surface-container-high shadow-lg"
+                              : "border-outline-variant bg-surface-container-low hover:border-outline hover:bg-surface-container"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="h-5 w-5 rounded-full border border-white/20 shadow-sm shrink-0"
+                                  style={{ backgroundColor: c.swatchColor }}
+                                />
+                                <h3 className="font-bold text-xs text-on-surface">{c.name}</h3>
+                              </div>
+                              {isSelected ? (
+                                <span className="material-symbols-outlined text-primary text-[18px]">
+                                  check_circle
+                                </span>
+                              ) : (
+                                <span className="h-4 w-4 rounded-full border border-outline-variant group-hover:border-outline transition" />
+                              )}
+                            </div>
+
+                            <div
+                              className="h-1.5 w-full rounded-full mb-3"
+                              style={{ backgroundColor: c.swatchColor }}
+                            />
+
+                            <p className="text-[11px] text-outline leading-relaxed">
+                              {c.description}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* 3. Workspace Density & Preferences */}
                 <section className="rounded-xl border border-outline-variant bg-surface-container p-6">
                   <h2 className="font-bold text-base flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
@@ -206,7 +302,7 @@ export default function SettingsPage() {
                   </div>
                 </section>
 
-                {/* Session Settings */}
+                {/* 4. Session Settings */}
                 <section className="rounded-xl border border-outline-variant bg-surface-container p-6">
                   <h2 className="font-bold text-base flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-[20px]">timer</span>
@@ -245,17 +341,15 @@ export default function SettingsPage() {
               {/* Aside summary */}
               <aside className="h-fit rounded-xl border border-outline-variant bg-surface-container p-5 space-y-4">
                 <div>
-                  <p className="font-label-mono text-[10px] uppercase tracking-wider text-primary font-bold">
-                    TERMINAL STATUS
-                  </p>
-                  <h3 className="mt-1 font-bold text-sm">System Diagnostics</h3>
+                  <h3 className="font-bold text-sm">System &amp; Environment</h3>
+                  <p className="text-xs text-outline mt-0.5">Active client session</p>
                 </div>
                 <div className="space-y-2 text-xs">
                   <Status label="Active Theme" value={theme.toUpperCase()} />
-                  <Status label="Terminal ID" value="ALPHA_77" />
-                  <Status label="Cluster Link" value="ACTIVE" />
-                  <Status label="Region" value="REGION-04" />
-                  <Status label="Session Lock" value={`${sessionTimeout}m`} />
+                  <Status label="Accent Color" value={accent.toUpperCase()} />
+                  <Status label="Environment" value="Production" />
+                  <Status label="Gateway Link" value="Active (TLS 1.3)" />
+                  <Status label="Session Timeout" value={`${sessionTimeout}m`} />
                 </div>
               </aside>
             </div>

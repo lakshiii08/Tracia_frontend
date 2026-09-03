@@ -56,19 +56,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center text-on-background overflow-hidden relative">
-      {/* Decorative background glow */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none opacity-20"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at center, rgba(74, 142, 255, 0.1) 0%, transparent 60%)",
-        }}
-      />
-
-      <div className="z-10 w-full max-w-md px-4 md:px-0">
+    <div className="min-h-screen w-screen flex items-center justify-center text-on-background bg-background px-4">
+      <div className="w-full max-w-md">
         {/* Login Card */}
-        <div className="bg-surface-container-low rounded-lg ghost-border p-5 md:p-8 flex flex-col gap-6 relative overflow-hidden backdrop-blur-md">
+        <div className="bg-surface-container-low rounded-xl border border-outline-variant p-6 sm:p-8 flex flex-col gap-6 shadow-xl">
           {/* Branding Logo */}
           <div className="flex flex-col items-center justify-center text-center">
             {/* Dark / Default Theme: TRACIA_black.png */}
@@ -78,7 +69,7 @@ export default function LoginPage() {
               width={320}
               height={320}
               priority
-              className={`w-60 sm:w-68 h-auto object-contain rounded-2xl drop-shadow-lg transition-opacity duration-150 ${
+              className={`w-52 sm:w-60 h-auto object-contain rounded-2xl transition-opacity duration-150 ${
                 isLight ? "hidden" : "block"
               }`}
             />
@@ -89,7 +80,7 @@ export default function LoginPage() {
               width={320}
               height={320}
               priority
-              className={`w-60 sm:w-68 h-auto object-contain rounded-2xl drop-shadow-lg transition-opacity duration-150 ${
+              className={`w-52 sm:w-60 h-auto object-contain rounded-2xl transition-opacity duration-150 ${
                 isLight ? "block" : "hidden"
               }`}
             />
@@ -97,27 +88,27 @@ export default function LoginPage() {
 
           {/* Login Form */}
           <form
-            className="flex flex-col gap-4 mt-2"
+            className="flex flex-col gap-4 mt-1"
             onSubmit={(e) => {
               e.preventDefault();
               handleAuthenticate();
             }}
           >
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label
-                className="font-label-mono text-label-mono text-on-surface-variant"
+                className="text-xs font-medium text-on-surface-variant"
                 htmlFor="operator-id"
               >
-                Operator ID
+                Officer / User ID
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
                   badge
                 </span>
                 <input
-                  className="w-full bg-surface-container-lowest border-outline-variant text-on-surface focus:border-primary focus:ring-1 focus:ring-primary rounded pl-10 pr-3 py-2 font-code-sm text-code-sm transition-all duration-200 outline-none"
+                  className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface focus:border-primary focus:ring-1 focus:ring-primary rounded-lg pl-10 pr-3 py-2 text-sm transition-all duration-150 outline-none"
                   id="operator-id"
-                  placeholder="Enter Operator ID"
+                  placeholder="e.g. TRACIA-ADMIN"
                   type="text"
                   value={operatorId}
                   onChange={(e) => setOperatorId(e.target.value)}
@@ -125,19 +116,19 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 mt-1">
+            <div className="flex flex-col gap-1.5">
               <label
-                className="font-label-mono text-label-mono text-on-surface-variant"
+                className="text-xs font-medium text-on-surface-variant"
                 htmlFor="cipher"
               >
-                Access Cipher
+                Password
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
-                  password
+                  lock
                 </span>
                 <input
-                  className="w-full bg-surface-container-lowest border-outline-variant text-on-surface focus:border-primary focus:ring-1 focus:ring-primary rounded pl-10 pr-3 py-2 font-code-sm text-code-sm transition-all duration-200 outline-none"
+                  className="w-full bg-surface-container-lowest border border-outline-variant text-on-surface focus:border-primary focus:ring-1 focus:ring-primary rounded-lg pl-10 pr-10 py-2 text-sm transition-all duration-150 outline-none"
                   id="cipher"
                   placeholder="••••••••••••"
                   type={showCipher ? "text" : "password"}
@@ -145,66 +136,60 @@ export default function LoginPage() {
                   onChange={(e) => setCipher(e.target.value)}
                   aria-invalid={Boolean(error)}
                 />
-                <button type="button" aria-label={showCipher ? "Hide Access Cipher" : "Show Access Cipher"} onClick={() => setShowCipher(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-outline hover:text-primary">
-                  <span className="material-symbols-outlined text-[18px]">{showCipher ? "visibility_off" : "visibility"}</span>
+                <button
+                  type="button"
+                  aria-label={showCipher ? "Hide password" : "Show password"}
+                  onClick={() => setShowCipher((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-outline hover:text-primary transition"
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {showCipher ? "visibility_off" : "visibility"}
+                  </span>
                 </button>
               </div>
             </div>
 
             {error && (
-              <div role="alert" className="flex items-start gap-2 rounded-lg border border-entity-risk/30 bg-entity-risk/10 px-3 py-2.5 text-sm text-error">
-                <span className="material-symbols-outlined text-[18px]">error</span>
+              <div
+                role="alert"
+                className="flex items-start gap-2 rounded-lg border border-entity-risk/30 bg-entity-risk/10 px-3 py-2 text-xs text-error"
+              >
+                <span className="material-symbols-outlined text-[16px] shrink-0 mt-0.5">error</span>
                 <span>{error}</span>
               </div>
             )}
 
             <label className="flex items-center gap-2 text-xs text-on-surface-variant cursor-pointer select-none">
-              <input type="checkbox" checked={rememberId} onChange={(e) => setRememberId(e.target.checked)} className="accent-primary" />
-              Remember Operator ID on this terminal
+              <input
+                type="checkbox"
+                checked={rememberId}
+                onChange={(e) => setRememberId(e.target.checked)}
+                className="accent-primary rounded"
+              />
+              Remember ID on this device
             </label>
-
-            {/* Trust Badge */}
-            <div className="flex items-center justify-center gap-2 mt-2 bg-surface-container/50 py-2 rounded-sm border border-outline-variant/30">
-              <span className="material-symbols-outlined text-entity-account text-[16px]">
-                verified_user
-              </span>
-              <span className="font-label-mono text-label-mono text-on-surface-variant text-[10px]">
-                Secured with JWT Authentication
-              </span>
-            </div>
 
             <button
               type="submit"
               disabled={loading}
               aria-busy={loading}
-              className="mt-4 w-full bg-entity-person text-on-surface font-headline-md text-headline-md py-3 rounded flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-all duration-200 glow-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-2 w-full bg-primary text-on-primary font-semibold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
             >
-              {loading ? <span className="h-5 w-5 rounded-full border-2 border-current/30 border-t-current animate-spin" /> : <span className="material-symbols-outlined text-[20px]">login</span>}
-              {loading ? "AUTHENTICATING…" : "AUTHENTICATE"}
+              {loading ? (
+                <span className="h-4 w-4 rounded-full border-2 border-current/30 border-t-current animate-spin" />
+              ) : (
+                <span className="material-symbols-outlined text-[18px]">login</span>
+              )}
+              {loading ? "Signing In…" : "Sign In"}
             </button>
           </form>
 
-          <div className="border-t border-outline-variant/50 pt-4 mt-2">
-            <p className="font-body-sm text-body-sm text-on-surface-variant/70 text-center text-[12px]">
-              Authorized roles: Admin / Investigator / Analyst / Auditor
+          <div className="border-t border-outline-variant/40 pt-4 text-center">
+            <p className="text-xs text-on-surface-variant/70">
+              Demo Access: TRACIA-ADMIN / TRACIA-2026
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Metadata */}
-      <div className="absolute bottom-4 left-4 flex flex-col gap-1 z-0">
-        <span className="font-code-sm text-code-sm text-outline-variant text-[11px] uppercase opacity-60">
-          SYSTEM_STATUS: SECURE_LINK
-        </span>
-      </div>
-      <div className="absolute bottom-4 right-4 flex flex-col gap-1 text-right z-0">
-        <span className="font-code-sm text-code-sm text-outline-variant text-[11px] uppercase opacity-60">
-          SESSION_ID: TX-992
-        </span>
-        <span className="font-code-sm text-code-sm text-outline-variant text-[11px] uppercase opacity-60">
-          TERMINAL: TRACIA_CORE_v1.0
-        </span>
       </div>
     </div>
   );

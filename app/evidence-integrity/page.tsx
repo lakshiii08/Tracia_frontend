@@ -32,26 +32,24 @@ export default function EvidenceIntegrityPage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <AppHeader
-          title="Blockchain Evidence Integrity & Custody"
-          showSearch
+          title="Evidence Integrity &amp; Custody"
           onToggleSidebar={() => setSidebarOpen(true)}
         />
         <main className="min-w-0 flex-1">
-          <CaseGate moduleTitle="Blockchain Evidence Integrity & Chain of Custody">
+          <CaseGate moduleTitle="Evidence Integrity &amp; Chain of Custody">
             <div className="p-5 lg:p-8">
               <div className="mx-auto max-w-7xl space-y-6">
                 {/* Header banner */}
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <div className="font-label-mono text-xs text-primary">TRUST &amp; SECURITY LAYER</div>
-                    <h1 className="text-3xl font-bold">Blockchain Evidence Integrity &amp; Chain of Custody</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold">Evidence Integrity &amp; Chain of Custody</h1>
                     <p className="mt-1 text-sm text-on-surface-variant">
-                      Cryptographic SHA-256 evidence hashing, permissioned blockchain transaction verification, and immutable chain of custody audit trails.
+                      Cryptographic SHA-256 evidence hashing, blockchain transaction verification, and immutable chain of custody audit trails.
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400">
-                      BLOCKCHAIN INTEGRITY ACTIVE
+                    <span className="rounded-full border border-outline-variant bg-surface-container-high px-3 py-1 text-xs font-semibold text-on-surface">
+                      Verified Ledger Active
                     </span>
                   </div>
                 </div>
@@ -66,7 +64,7 @@ export default function EvidenceIntegrityPage() {
                         : "text-on-surface-variant hover:text-on-surface"
                     }`}
                   >
-                    Blockchain Chain of Custody (Sections 22–24)
+                    Chain of Custody Ledger
                   </button>
                   <button
                     onClick={() => setActiveTab("integrity")}
@@ -83,24 +81,24 @@ export default function EvidenceIntegrityPage() {
                 {/* TAB: Blockchain Chain of Custody */}
                 {activeTab === "blockchain" && (
                   <div className="space-y-6">
-                    {/* Graph Schema Diagram (Section 23 Blueprint) */}
+                    {/* Graph Schema Diagram */}
                     <section className="rounded-xl border border-outline-variant bg-surface-container p-5">
-                      <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-on-surface-variant font-label-mono">
-                        Blockchain + Neo4j Relationship Schema (Section 23 Blueprint)
+                      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-outline">
+                        Evidence Verification Linkage
                       </h2>
                       <div className="flex flex-wrap items-center justify-center gap-4 py-3 font-mono text-xs text-center">
-                        <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 p-3">
-                          <div className="font-bold text-blue-400">(:Evidence)</div>
+                        <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                          <div className="font-semibold text-primary">(:Evidence)</div>
                           <div className="text-[10px] text-outline">
                             {blockchainRecords[0]?.filename || "incident_report_01.pdf"}
                           </div>
                         </div>
                         <div className="flex flex-col items-center">
-                          <span className="text-[10px] font-bold text-emerald-400">VERIFIED_BY</span>
-                          <span className="material-symbols-outlined text-primary">arrow_forward</span>
+                          <span className="text-[10px] font-mono text-outline">VERIFIED_BY</span>
+                          <span className="material-symbols-outlined text-primary text-[18px]">arrow_forward</span>
                         </div>
-                        <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3">
-                          <div className="font-bold text-emerald-400">(:BlockchainRecord)</div>
+                        <div className="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                          <div className="font-semibold text-emerald-400">(:BlockchainRecord)</div>
                           <div className="text-[10px] text-outline">
                             {blockchainRecords[0]?.txId?.substring(0, 14) || "0x7f8a3291bc40"}...
                           </div>
@@ -111,7 +109,7 @@ export default function EvidenceIntegrityPage() {
                     {/* Chain of Custody Pipeline Card */}
                     {pipelineSteps.length > 0 && (
                       <section className="rounded-xl border border-outline-variant bg-surface-container p-5 space-y-4">
-                        <h3 className="font-semibold text-sm">Chain of Custody Handover Log (Section 24 Blueprint)</h3>
+                        <h3 className="font-semibold text-sm">Chain of Custody Handover Log</h3>
                         <div className="grid gap-3 sm:grid-cols-5 text-center font-mono text-xs">
                           {pipelineSteps.map((step) => (
                             <div

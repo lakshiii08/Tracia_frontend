@@ -108,10 +108,10 @@
 }
 
 .ghost-border {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .glow-hover:hover {
-  box-shadow: 0 0 8px rgba(173, 199, 255, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 body {
   background-color: var(--color-background, #0a0e17);
@@ -191,6 +191,74 @@ html[data-theme="pure-white"] .ghost-border {
 
 html[data-theme="pure-white"] .glow-hover:hover {
   box-shadow: 0 0 10px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* =========================================================
+ * ACCENT COLOR SYSTEM: BLUE, RED, YELLOW, GREEN
+ * ========================================================= */
+
+/* --- 1. BLUE ACCENT (Default) --- */
+html[data-accent="blue"] {
+  --color-primary: #60a5fa;
+  --color-primary-container: #2563eb;
+  --color-on-primary: #001a41;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #60a5fa;
+}
+html[data-theme="pure-white"][data-accent="blue"] {
+  --color-primary: #2563eb;
+  --color-primary-container: #1d4ed8;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #2563eb;
+}
+
+/* --- 2. RED ACCENT --- */
+html[data-accent="red"] {
+  --color-primary: #f87171;
+  --color-primary-container: #dc2626;
+  --color-on-primary: #450a0a;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #f87171;
+}
+html[data-theme="pure-white"][data-accent="red"] {
+  --color-primary: #dc2626;
+  --color-primary-container: #b91c1c;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #dc2626;
+}
+
+/* --- 3. YELLOW ACCENT --- */
+html[data-accent="yellow"] {
+  --color-primary: #fbbf24;
+  --color-primary-container: #d97706;
+  --color-on-primary: #451a03;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #fbbf24;
+}
+html[data-theme="pure-white"][data-accent="yellow"] {
+  --color-primary: #d97706;
+  --color-primary-container: #b45309;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #d97706;
+}
+
+/* --- 4. GREEN ACCENT --- */
+html[data-accent="green"] {
+  --color-primary: #34d399;
+  --color-primary-container: #059669;
+  --color-on-primary: #022c22;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #34d399;
+}
+html[data-theme="pure-white"][data-accent="green"] {
+  --color-primary: #059669;
+  --color-primary-container: #047857;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ffffff;
+  --color-surface-tint: #059669;
 }
 
 .material-symbols-outlined {
